@@ -6,52 +6,60 @@
 Usuario usuarios[50];
 int totalUsuarios = 0;
 
-
 void enviarCadastroUsuario(const char *nome, const char *senha, const char *nivel) {
+    char comando[128];
+    int encontrado = 0;
+
     
     for (int i = 0; i < totalUsuarios; i++) {
         if (strcmp(usuarios[i].nome, nome) == 0) {
             strcpy(usuarios[i].senha, senha);
             strcpy(usuarios[i].nivel, nivel);
-            goto enviar;
+            encontrado = 1;
+            break;
         }
     }
 
-    if (totalUsuarios < 50) {
+    
+    if (!encontrado && totalUsuarios < 50) {
         strcpy(usuarios[totalUsuarios].nome, nome);
         strcpy(usuarios[totalUsuarios].senha, senha);
         strcpy(usuarios[totalUsuarios].nivel, nivel);
         totalUsuarios++;
     }
 
-enviar:
-    char comando[128];
+   
     snprintf(comando, sizeof(comando), "%s;%s;%s", nome, senha, nivel);
     enviarSerial("CADASTRO:", comando);
 }
 
-
 void listarUsuarios() {
     printf("\n--- Usuarios cadastrados ---\n");
     for (int i = 0; i < totalUsuarios; i++) {
-        printf("Nome: %s | Nivel: %s\n", usuarios[i].nome, usuarios[i].nivel);
+        printf("Nome: %s | Nivel: %s\n",
+               usuarios[i].nome,
+               usuarios[i].nivel);
     }
 }
 
-
 void alterarSenha(const char *nome, const char *novaSenha) {
+    char comando[128];
+
     for (int i = 0; i < totalUsuarios; i++) {
         if (strcmp(usuarios[i].nome, nome) == 0) {
+            
             strcpy(usuarios[i].senha, novaSenha);
 
-            char comando[128];
             snprintf(comando, sizeof(comando), "%s;%s;%s",
-                     usuarios[i].nome, usuarios[i].senha, usuarios[i].nivel);
+                     usuarios[i].nome,
+                     usuarios[i].senha,
+                     usuarios[i].nivel);
 
             enviarSerial("CADASTRO:", comando);
             return;
         }
     }
+
     printf("Usuario %s nao encontrado!\n", nome);
 }
 
@@ -67,16 +75,16 @@ void salvarUsuariosEmArquivo() {
                 usuarios[i].senha,
                 usuarios[i].nivel);
     }
+
     fclose(f);
 }
-
-
 
 void carregarUsuariosDoArquivo() {
     FILE *f = fopen("usuarios.txt", "r");
     if (!f) return;
 
     char linha[128];
+
     while (fgets(linha, sizeof(linha), f)) {
         char nome[50], senha[20], nivel[20];
 

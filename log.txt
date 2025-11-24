@@ -2,3 +2,7 @@
 [24/11/2025 15:47:52] Usuario cadastrado via admin
 [24/11/2025 15:53:39] Login admin bem-sucedido
 [24/11/2025 15:53:55] Usuario cadastrado via admin
+[24/11/2025 16:02:51] Login admin bem-sucedido
+[24/11/2025 16:03:05] Usuario cadastrado via admin
+[24/11/2025 16:06:02] Login admin bem-sucedido
+[24/11/2025 16:06:16] Senha de usuario alterada

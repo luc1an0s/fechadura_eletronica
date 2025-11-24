@@ -3,7 +3,7 @@
 #include <Keypad.h>
 
 #define MAX_USUARIOS 10
-#define BUZZER_PIN 10 
+#define BUZZER_PIN 10
 
 struct Usuario {
   String nome;
@@ -16,9 +16,9 @@ int totalUsuarios = 0;
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
-// Teclado
-const byte ROWS = 4; 
-const byte COLS = 4; 
+// Teclado matricial
+const byte ROWS = 4;
+const byte COLS = 4;
 char keys[ROWS][COLS] = {
   {'1','2','3','A'},
   {'4','5','6','B'},
@@ -26,8 +26,8 @@ char keys[ROWS][COLS] = {
   {'*','0','#','D'}
 };
 
-byte rowPins[ROWS] = {9, 8, 7, 6};   
-byte colPins[COLS] = {5, 4, 3, 2};   
+byte rowPins[ROWS] = {9, 8, 7, 6};
+byte colPins[COLS] = {5, 4, 3, 2};
 
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
@@ -39,37 +39,39 @@ void setup() {
   lcd.backlight();
   lcd.setCursor(0,0);
   lcd.print("Sistema pronto");
-
   pinMode(BUZZER_PIN, OUTPUT);
 }
 
 void loop() {
 
+  // -------------------------------
+  // Leitura do teclado
+  // -------------------------------
   char key = keypad.getKey();
   if (key) {
-    if (key == '#') { 
+    if (key == '#') {
       validarSenha(senhaDigitada);
       senhaDigitada = "";
-    } 
-    else if (key == '*') { 
+    }
+    else if (key == '*') {
       senhaDigitada = "";
       lcd.clear();
       lcd.print("Senha limpa");
-    } 
-    else if (key == 'A') {   
+    }
+    else if (key == 'A') {
       tone(BUZZER_PIN, 1000);
       delay(300);
-      noTone(BUZZER_PIN);   
+      noTone(BUZZER_PIN);
       lcd.clear();
       lcd.print("Buzzer acionado");
-    } 
+    }
     else {
       senhaDigitada += key;
 
       lcd.clear();
       lcd.print("Senha: ");
 
-      // mostrar * no lugar dos números
+      // Mostra **** no LCD, em vez da senha real
       for (int i = 0; i < senhaDigitada.length(); i++) {
         lcd.print("*");
       }
@@ -78,24 +80,31 @@ void loop() {
 
   if (Serial.available()) {
     String comando = Serial.readStringUntil('\n');
-    comando.trim();
+
+    comando.replace("\r", "");  // remove CR (Windows)
+    comando.trim();             // remove espaços ou lixo
+
     if (comando.startsWith("CADASTRO:")) {
       cadastrarUsuario(comando);
+      Serial.println("OK");     // ACK para o PC
     }
   }
 }
 
 void validarSenha(String senha) {
   bool encontrado = false;
+
   for (int i = 0; i < totalUsuarios; i++) {
     if (usuarios[i].senha == senha) {
       encontrado = true;
       lcd.clear();
       lcd.print("Acesso liberado");
+
       Serial.println("LOGIN:" + usuarios[i].nome + ";SUCESSO");
-      break;
+      return;
     }
   }
+
   if (!encontrado) {
     lcd.clear();
     lcd.print("Senha incorreta");
@@ -103,8 +112,11 @@ void validarSenha(String senha) {
   }
 }
 
+
 void cadastrarUsuario(String comando) {
+
   comando.replace("CADASTRO:", "");
+
   int p1 = comando.indexOf(';');
   int p2 = comando.indexOf(';', p1+1);
 
@@ -112,13 +124,15 @@ void cadastrarUsuario(String comando) {
   String senha = comando.substring(p1+1, p2);
   String nivel = comando.substring(p2+1);
 
+  // Atualizar usuário existente?
   for (int i = 0; i < totalUsuarios; i++) {
     if (usuarios[i].nome == nome) {
       usuarios[i].senha = senha;
       usuarios[i].nivel = nivel;
+
+      Serial.println("USUARIO_ATUALIZADO:" + nome);
       lcd.clear();
       lcd.print("Senha alterada");
-      Serial.println("USUARIO_ATUALIZADO:" + nome);
       return;
     }
   }
@@ -128,12 +142,14 @@ void cadastrarUsuario(String comando) {
     usuarios[totalUsuarios].senha = senha;
     usuarios[totalUsuarios].nivel = nivel;
     totalUsuarios++;
-    lcd.clear();
-    lcd.print("Usuario cadastrado");
+
     Serial.println("USUARIO_CADASTRADO:" + nome);
-  } else {
+    lcd.clear();
+    lcd.print("Usuario criado");
+  }
+  else {
+    Serial.println("CADASTRO_FALHA:limite");
     lcd.clear();
     lcd.print("Limite atingido");
-    Serial.println("CADASTRO_FALHA:limite");
   }
 }
