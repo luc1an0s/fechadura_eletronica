@@ -3,13 +3,13 @@
 #include <string.h>
 #include "serial.h"
 
-static HANDLE hSerial;
+static HANDLE hSerial = INVALID_HANDLE_VALUE;
 
 int abrirSerial(const char *porta) {
     hSerial = CreateFileA(porta, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
     if (hSerial == INVALID_HANDLE_VALUE) {
         printf("Erro ao abrir %s\n", porta);
-        return 0;
+        return 0; 
     }
 
     DCB dcbSerialParams = {0};
@@ -26,16 +26,19 @@ int abrirSerial(const char *porta) {
     timeouts.WriteTotalTimeoutMultiplier = 10;
     SetCommTimeouts(hSerial, &timeouts);
 
-    return 1;
+    return 1; 
 }
 
 void enviarSerial(const char *prefixo, const char *mensagem) {
     if (hSerial == INVALID_HANDLE_VALUE) return;
 
-    char buffer[64];
+    char buffer[128];
     snprintf(buffer, sizeof(buffer), "%s%s\n", prefixo, mensagem);
+
     DWORD bytesEscritos;
     WriteFile(hSerial, buffer, strlen(buffer), &bytesEscritos, NULL);
+
+    printf("Mensagem enviada: %s", buffer);
 }
 
 void fecharSerial() {
