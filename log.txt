@@ -6,3 +6,5 @@
 [24/11/2025 16:03:05] Usuario cadastrado via admin
 [24/11/2025 16:06:02] Login admin bem-sucedido
 [24/11/2025 16:06:16] Senha de usuario alterada
+[24/11/2025 16:17:36] Login admin bem-sucedido
+[24/11/2025 16:36:40] Login admin bem-sucedido

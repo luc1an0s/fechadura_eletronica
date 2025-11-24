@@ -1,86 +1,126 @@
 #include <stdio.h>
 #include <string.h>
+#include <locale.h>
 #include "usuario.h"
 #include "serial.h"
 #include "log.h"
 
+// Cores ANSI
+#define RESET   "\033[0m"
+#define RED     "\033[1;31m"
+#define GREEN   "\033[1;32m"
+#define YELLOW  "\033[1;33m"
+#define BLUE    "\033[1;34m"
+#define CYAN    "\033[1;36m"
+
+
+void limparTela() {
+#ifdef _WIN32
+    system("cls");
+#else
+    system("clear");
+#endif
+}
+
 void mostrarMenu() {
-    printf("\033[1;34m+-----------------------------+\n");
-    printf("|        PAINEL ADMIN         |\n");
-    printf("+-----------------------------+\033[0m\n");
-    printf("1 - Ver usuarios cadastrados\n");
-    printf("2 - Alterar senha de usuario\n");
-    printf("3 - Cadastrar novo usuario\n");
-    printf("4 - Sair\n");
-    printf("Escolha: ");
+    printf(BLUE "+-----------------------------+\n" RESET);
+    printf(BLUE "|        PAINEL ADMIN         |\n" RESET);
+    printf(BLUE "+-----------------------------+\n" RESET);
+    printf(CYAN "1 - Ver usuários cadastrados\n");
+    printf(CYAN "2 - Alterar senha de usuário\n");
+    printf(CYAN "3 - Cadastrar novo usuário\n");
+    printf(CYAN "4 - Sair\n" RESET);
+    printf(YELLOW "Escolha: " RESET);
+}
+
+void lerLinha(char *buffer, int tamanho) {
+    if (fgets(buffer, tamanho, stdin)) {
+        buffer[strcspn(buffer, "\n")] = 0; 
+    }
 }
 
 int main() {
-    char nome[50], senha[20];
+    setlocale(LC_ALL, ""); 
 
-    printf("Login admin\nUsuario: ");
-    scanf("%s", nome);
+    char nome[50], senha[50];
+
+    limparTela();
+    printf(BLUE "Login admin\n" RESET);
+    printf("Usuario: ");
+    lerLinha(nome, 50);
     printf("Senha: ");
-    scanf("%s", senha);
+    lerLinha(senha, 50);
 
-    
     if (strcmp(nome, "admin") != 0 || strcmp(senha, "1234") != 0) {
-        printf("\033[1;31mAcesso negado!\033[0m\n");
+        printf(RED "Acesso negado!\n" RESET);
         registrarLog("Tentativa de login admin falhou");
         return 1;
     }
 
-    printf("\033[1;32mLogin admin bem-sucedido!\033[0m\n");
+    printf(GREEN "Login admin bem-sucedido!\n" RESET);
     registrarLog("Login admin bem-sucedido");
 
-    
     if (!abrirSerial("\\\\.\\COM3")) {
-        printf("Erro ao abrir porta COM3\n");
+        printf(RED "Erro ao abrir porta COM3\n" RESET);
         return 1;
     }
 
-    
     carregarUsuariosDoArquivo();
 
     int opcao;
     do {
         mostrarMenu();
-        scanf("%d", &opcao);
+        char opcaoStr[10];
+        lerLinha(opcaoStr, 10);
+        opcao = atoi(opcaoStr);
 
-        if (opcao == 1) {
-            listarUsuarios();
-        } 
-        else if (opcao == 2) {
-            char nomeAlt[50], novaSenha[20];
+        switch(opcao) {
+            case 1:
+                limparTela();
+                printf(BLUE "--- Usuários cadastrados ---\n" RESET);
+                listarUsuarios();
+                break;
 
-            printf("Usuario: ");
-            scanf("%s", nomeAlt);
-            printf("Nova senha: ");
-            scanf("%s", novaSenha);
+            case 2: {
+                char nomeAlt[50], novaSenha[50];
+                printf("Usuario: ");
+                lerLinha(nomeAlt, 50);
+                printf("Nova senha: ");
+                lerLinha(novaSenha, 50);
+                alterarSenha(nomeAlt, novaSenha);
+                salvarUsuariosEmArquivo();
+                registrarLog("Senha de usuario alterada");
+                printf(GREEN "Senha alterada com sucesso!\n" RESET);
+                break;
+            }
 
-            alterarSenha(nomeAlt, novaSenha);
-            salvarUsuariosEmArquivo();
-            registrarLog("Senha de usuario alterada");
+            case 3: {
+                char nomeNovo[50], senhaNovo[50], nivel[20];
+                printf("Nome: ");
+                lerLinha(nomeNovo, 50);
+                printf("Senha: ");
+                lerLinha(senhaNovo, 50);
+                printf("Nivel (usuario/admin): ");
+                lerLinha(nivel, 20);
+                enviarCadastroUsuario(nomeNovo, senhaNovo, nivel);
+                salvarUsuariosEmArquivo();
+                registrarLog("Usuario cadastrado via admin");
+                printf(GREEN "Usuário cadastrado com sucesso!\n" RESET);
+                break;
+            }
+
+            case 4:
+                printf(BLUE "Encerrando painel admin...\n" RESET);
+                break;
+
+            default:
+                printf(RED "Opção inválida! Tente novamente.\n" RESET);
+                break;
         }
-        else if (opcao == 3) {
-            char nomeNovo[50], senhaNovo[20], nivelNovo[20];
 
-            printf("Nome: ");
-            scanf("%s", nomeNovo);
-            printf("Senha: ");
-            scanf("%s", senhaNovo);
-            printf("Nivel (usuario/admin): ");
-            scanf("%s", nivelNovo);
-
-            enviarCadastroUsuario(nomeNovo, senhaNovo, nivelNovo);
-            salvarUsuariosEmArquivo();
-            registrarLog("Usuario cadastrado via admin");
-        }
-
+        printf("\n");
     } while (opcao != 4);
 
     fecharSerial();
-    printf("Encerrando painel admin...\n");
-
     return 0;
 }
