@@ -1,15 +1,26 @@
-#include "serial.h"
-#include "log.h"
 #include <stdio.h>
+#include <string.h>
+#include "serial.h"
 
-void lerSerialArduino() {
-    FILE* arduino = fopen("COM3:", "w");
-    if (!arduino) { printf("Erro ao abrir porta serial.\n"); return; }
+static FILE *arduino = NULL;
 
-    char buffer[100];
-    if (fgets(buffer, sizeof(buffer), arduino)) {
-        printf("Recebido: %s\n", buffer);
-        registrarLog(buffer);
+void abrirSerial(const char *porta) {
+    arduino = fopen("COM3:", "w");
+    if (arduino == NULL) {
+        printf("Erro ao abrir porta %s\n", porta);
     }
-    fclose(arduino);
+}
+
+void enviarSerial(const char *prefixo, const char *mensagem) {
+    if (arduino != NULL) {
+        fprintf(arduino, "%s%s\n", prefixo, mensagem);
+        fflush(arduino);
+    }
+}
+
+void fecharSerial() {
+    if (arduino != NULL) {
+        fclose(arduino);
+        arduino = NULL;
+    }
 }
