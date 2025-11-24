@@ -1,46 +1,75 @@
 #include <stdio.h>
+#include <string.h>
 #include "usuario.h"
 #include "serial.h"
 #include "log.h"
 
-int main() {
-    printf("Tentando abrir porta serial...\n");
+void mostrarMenu() {
+    printf("\033[1;34m+-----------------------------+\n");
+    printf("|        PAINEL ADMIN         |\n");
+    printf("+-----------------------------+\033[0m\n");
+    printf("1 - Ver tentativas de acesso\n");
+    printf("2 - Ver usuarios cadastrados\n");
+    printf("3 - Alterar senha de usuario\n");
+    printf("4 - Cadastrar novo usuario\n");
+    printf("5 - Sair\n");
+    printf("Escolha: ");
+}
 
-    // tenta abrir COM3
-    if (!abrirSerial("\\\\.\\COM3")) {
-        printf("Falha ao abrir porta COM3\n");
-        printf("Pressione ENTER para sair...\n");
-        getchar(); 
+int main() {
+    char nome[50], senha[20];
+    printf("Login admin\nUsuario: ");
+    scanf("%s", nome);
+    printf("Senha: ");
+    scanf("%s", senha);
+
+    if (strcmp(nome, "admin") != 0 || strcmp(senha, "1234") != 0) {
+        printf("\033[1;31mAcesso negado!\033[0m\n");
+        registrarLog("Tentativa de login admin falhou");
         return 1;
     }
 
-    printf("Porta COM3 aberta com sucesso!\n");
+    printf("\033[1;32mLogin admin bem-sucedido!\033[0m\n");
+    registrarLog("Login admin bem-sucedido");
+
+    if (!abrirSerial("\\\\.\\COM3")) {
+        printf("Erro ao abrir porta COM3\n");
+        return 1;
+    }
 
     int opcao;
-    char nome[50], senha[20];
-
     do {
-        printf("\nMenu:\n");
-        printf("1 - Cadastrar usuario\n");
-        printf("2 - Sair\n");
-        printf("Escolha: ");
+        mostrarMenu();
         scanf("%d", &opcao);
 
         if (opcao == 1) {
-            printf("Nome: ");
-            scanf("%s", nome);
-            printf("Senha: ");
-            scanf("%s", senha);
+            printf("\n--- Tentativas de acesso ---\n");
 
-            cadastrarUsuario(nome, senha);
-            registrarLog("Usuario cadastrado");
+        } else if (opcao == 2) {
+            printf("\n--- Usuarios cadastrados ---\n");
+            listarUsuarios(); 
+        } else if (opcao == 3) {
+            char nomeAlt[50], novaSenha[20];
+            printf("Usuario: ");
+            scanf("%s", nomeAlt);
+            printf("Nova senha: ");
+            scanf("%s", novaSenha);
+            alterarSenha(nomeAlt, novaSenha); 
+            registrarLog("Senha de usuario alterada");
+        } else if (opcao == 4) {
+            char nomeNovo[50], senhaNovo[20], nivel[20];
+            printf("Nome: ");
+            scanf("%s", nomeNovo);
+            printf("Senha: ");
+            scanf("%s", senhaNovo);
+            printf("Nivel (usuario/admin): ");
+            scanf("%s", nivel);
+            cadastrarUsuario(nomeNovo, senhaNovo, nivel); 
+            registrarLog("Usuario cadastrado via admin");
         }
-    } while (opcao != 2);
+    } while (opcao != 5);
 
     fecharSerial();
-
-    printf("Programa encerrado.\n");
-    printf("Pressione ENTER para sair...\n");
-    getchar(); 
+    printf("Encerrando painel admin...\n");
     return 0;
 }
