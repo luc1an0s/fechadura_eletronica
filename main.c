@@ -4,7 +4,9 @@
 #include "log.h"
 
 int main() {
-    abrirSerial("COM3:"); 
+    if (!abrirSerial("\\\\.\\COM3")) {
+        return 1;
+    }
 
     int opcao;
     char nome[50], senha[20];
