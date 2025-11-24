@@ -1,18 +1,19 @@
 #ifndef USUARIO_H
 #define USUARIO_H
 
-#define MAX_USUARIOS 10
-#define MAX_SENHA 20
-
 typedef struct {
     char nome[50];
-    char senha[MAX_SENHA];
+    char senha[20];
+    char nivel[20];
 } Usuario;
 
-extern Usuario usuarios[MAX_USUARIOS];
+extern Usuario usuarios[50];
 extern int totalUsuarios;
 
-void cadastrarUsuario(const char *nome, const char *senha);
-int validarUsuario(const char *senha);
+void enviarCadastroUsuario(const char *nome, const char *senha, const char *nivel);
+void listarUsuarios();
+void alterarSenha(const char *nome, const char *novaSenha);
+void salvarUsuariosEmArquivo();
+void carregarUsuariosDoArquivo();
 
 #endif

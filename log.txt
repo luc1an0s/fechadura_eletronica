@@ -1,4 +1,4 @@
-Mon Nov 24 15:15:15 2025
- - Usuario cadastrado
-Mon Nov 24 15:21:15 2025
- - Usuario cadastrado
+[24/11/2025 15:47:37] Login admin bem-sucedido
+[24/11/2025 15:47:52] Usuario cadastrado via admin
+[24/11/2025 15:53:39] Login admin bem-sucedido
+[24/11/2025 15:53:55] Usuario cadastrado via admin
