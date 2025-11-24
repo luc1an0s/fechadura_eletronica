@@ -8,3 +8,11 @@
 [24/11/2025 16:06:16] Senha de usuario alterada
 [24/11/2025 16:17:36] Login admin bem-sucedido
 [24/11/2025 16:36:40] Login admin bem-sucedido
+[24/11/2025 16:47:24] Login admin bem-sucedido
+[24/11/2025 16:48:46] Login admin bem-sucedido
+[24/11/2025 16:48:53] Login admin bem-sucedido
+[24/11/2025 16:50:36] Login admin bem-sucedido
+[24/11/2025 16:52:11] Login admin bem-sucedido
+[24/11/2025 16:54:13] Login admin bem-sucedido
+[24/11/2025 16:55:57] Login admin bem-sucedido
+[24/11/2025 16:56:29] Login admin bem-sucedido

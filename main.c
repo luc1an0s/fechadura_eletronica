@@ -1,5 +1,5 @@
 #include <stdio.h>
-#include <stdlib.h>  
+#include <stdlib.h>
 #include <string.h>
 #include <locale.h>
 #include "usuario.h"
@@ -21,38 +21,44 @@ void limparTela() {
 #endif
 }
 
+void lerLinha(char *buffer, int size) {
+    if (fgets(buffer, size, stdin))
+        buffer[strcspn(buffer, "\n")] = 0;
+}
+
 void mostrarMenu() {
     printf(BLUE "+-----------------------------+\n" RESET);
     printf(BLUE "|        PAINEL ADMIN         |\n" RESET);
     printf(BLUE "+-----------------------------+\n" RESET);
     printf(CYAN "1 - Ver usuários cadastrados\n");
-    printf(CYAN "2 - Alterar senha de usuário\n");
-    printf(CYAN "3 - Cadastrar novo usuário\n");
-    printf(CYAN "4 - Sair\n" RESET);
+    printf("2 - Alterar senha de usuário\n");
+    printf("3 - Cadastrar novo usuário\n");
+    printf("4 - Sair\n" RESET);
     printf(YELLOW "Escolha: " RESET);
 }
 
-void lerLinha(char *buffer, int tamanho) {
-    if (fgets(buffer, tamanho, stdin)) {
-        buffer[strcspn(buffer, "\n")] = 0;
-    }
-}
-
 int main() {
-    setlocale(LC_ALL, ""); 
+    setlocale(LC_ALL, "Portuguese_Brazil.1252");
+
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF) {}
 
     char nome[50], senha[50];
 
     limparTela();
     printf(BLUE "Login admin\n" RESET);
+
     printf("Usuario: ");
-    lerLinha(nome, 50);
+    lerLinha(nome, sizeof(nome));
+
     printf("Senha: ");
-    lerLinha(senha, 50);
+    lerLinha(senha, sizeof(senha));
 
     if (strcmp(nome, "admin") != 0 || strcmp(senha, "1234") != 0) {
         printf(RED "Acesso negado!\n" RESET);
         registrarLog("Tentativa de login admin falhou");
+        printf("Pressione ENTER para sair...");
+        getchar();
         return 1;
     }
 
@@ -61,22 +67,23 @@ int main() {
 
     if (!abrirSerial("\\\\.\\COM3")) {
         printf(RED "Erro ao abrir porta COM3\n" RESET);
+        getchar();
         return 1;
     }
 
     carregarUsuariosDoArquivo();
 
-    int opcao;
+    int opcao = 0;
+    char opcaoStr[10];
+
     do {
         mostrarMenu();
-        char opcaoStr[10];
-        lerLinha(opcaoStr, 10);
+        lerLinha(opcaoStr, sizeof(opcaoStr));
         opcao = atoi(opcaoStr);
 
-        switch(opcao) {
+        switch (opcao) {
             case 1:
                 limparTela();
-                printf(BLUE "--- Usuários cadastrados ---\n" RESET);
                 listarUsuarios();
                 break;
 
@@ -84,12 +91,13 @@ int main() {
                 char nomeAlt[50], novaSenha[50];
                 printf("Usuario: ");
                 lerLinha(nomeAlt, 50);
+
                 printf("Nova senha: ");
                 lerLinha(novaSenha, 50);
+
                 alterarSenha(nomeAlt, novaSenha);
                 salvarUsuariosEmArquivo();
                 registrarLog("Senha de usuario alterada");
-                printf(GREEN "Senha alterada com sucesso!\n" RESET);
                 break;
             }
 
@@ -97,29 +105,32 @@ int main() {
                 char nomeNovo[50], senhaNovo[50], nivel[20];
                 printf("Nome: ");
                 lerLinha(nomeNovo, 50);
+
                 printf("Senha: ");
                 lerLinha(senhaNovo, 50);
+
                 printf("Nivel (usuario/admin): ");
                 lerLinha(nivel, 20);
+
                 enviarCadastroUsuario(nomeNovo, senhaNovo, nivel);
                 salvarUsuariosEmArquivo();
                 registrarLog("Usuario cadastrado via admin");
-                printf(GREEN "Usuário cadastrado com sucesso!\n" RESET);
                 break;
             }
 
             case 4:
-                printf(BLUE "Encerrando painel admin...\n" RESET);
+                printf("Saindo...\n");
                 break;
 
             default:
-                printf(RED "Opção inválida! Tente novamente.\n" RESET);
+                printf(RED "Opção inválida!\n" RESET);
                 break;
         }
 
-        printf("\n");
     } while (opcao != 4);
 
     fecharSerial();
+    printf("Pressione ENTER para sair...");
+    getchar();
     return 0;
 }
