@@ -1,26 +1,29 @@
-#include "usuario.h"
 #include <stdio.h>
-#include <stdlib.h>
+#include <string.h>
+#include "usuario.h"
+#include "serial.h"
 
-void cadastrarUsuario() {
-    Usuario u;
-    printf("Nome: ");
-    scanf("%s", u.nome);
-    printf("Senha: ");
-    scanf("%s", u.senha);
+Usuario usuarios[MAX_USUARIOS];
+int totalUsuarios = 0;
 
-    FILE *f = fopen("usuarios.dat", "ab");
-    fwrite(&u, sizeof(Usuario), 1, f);
-    fclose(f);
-    printf("Usuario cadastrado!\n");
+void cadastrarUsuario(const char *nome, const char *senha) {
+    if (totalUsuarios < MAX_USUARIOS) {
+        strcpy(usuarios[totalUsuarios].nome, nome);
+        strcpy(usuarios[totalUsuarios].senha, senha);
+        totalUsuarios++;
+
+        
+        enviarSerial("CADASTRO:", senha);
+    } else {
+        printf("Limite de usuarios atingido!\n");
+    }
 }
 
-void listarUsuarios() {
-    Usuario u;
-    FILE *f = fopen("usuarios.dat", "rb");
-    if (!f) { printf("Nenhum usuario.\n"); return; }
-    while (fread(&u, sizeof(Usuario), 1, f)) {
-        printf("Nome: %s | Senha: %s\n", u.nome, u.senha);
+int validarUsuario(const char *senha) {
+    for (int i = 0; i < totalUsuarios; i++) {
+        if (strcmp(usuarios[i].senha, senha) == 0) {
+            return 1; 
+        }
     }
-    fclose(f);
+    return 0; 
 }
