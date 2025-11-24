@@ -1,22 +1,31 @@
 #include <stdio.h>
 #include "usuario.h"
-#include "log.h"
 #include "serial.h"
+#include "log.h"
 
 int main() {
+    abrirSerial("COM3:"); 
+
     int opcao;
+    char nome[50], senha[20];
+
     do {
-        printf("\n=== MENU ADMIN ===\n");
-        printf("1. Cadastrar usuario\n");
-        printf("2. Listar usuarios\n");
-        printf("3. Ler logs do Arduino\n");
-        printf("0. Sair\n");
+        printf("\n1 - Cadastrar usuario\n");
+        printf("2 - Sair\n");
+        printf("Escolha: ");
         scanf("%d", &opcao);
 
-        if (opcao == 1) cadastrarUsuario();
-        else if (opcao == 2) listarUsuarios();
-        else if (opcao == 3) lerSerialArduino();
-    } while (opcao != 0);
+        if (opcao == 1) {
+            printf("Nome: ");
+            scanf("%s", nome);
+            printf("Senha: ");
+            scanf("%s", senha);
 
+            cadastrarUsuario(nome, senha);
+            registrarLog("Usuario cadastrado");
+        }
+    } while (opcao != 2);
+
+    fecharSerial();
     return 0;
 }
