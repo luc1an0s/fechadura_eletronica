@@ -1,26 +1,46 @@
+#include <windows.h>
 #include <stdio.h>
 #include <string.h>
 #include "serial.h"
 
-static FILE *arduino = NULL;
+static HANDLE hSerial;
 
-void abrirSerial(const char *porta) {
-    arduino = fopen("COM3:", "w");
-    if (arduino == NULL) {
-        printf("Erro ao abrir porta %s\n", porta);
+int abrirSerial(const char *porta) {
+    hSerial = CreateFileA(porta, GENERIC_WRITE, 0, NULL, OPEN_EXISTING, 0, NULL);
+    if (hSerial == INVALID_HANDLE_VALUE) {
+        printf("Erro ao abrir %s\n", porta);
+        return 0;
     }
+
+    DCB dcbSerialParams = {0};
+    dcbSerialParams.DCBlength = sizeof(dcbSerialParams);
+    GetCommState(hSerial, &dcbSerialParams);
+    dcbSerialParams.BaudRate = CBR_9600;
+    dcbSerialParams.ByteSize = 8;
+    dcbSerialParams.StopBits = ONESTOPBIT;
+    dcbSerialParams.Parity   = NOPARITY;
+    SetCommState(hSerial, &dcbSerialParams);
+
+    COMMTIMEOUTS timeouts = {0};
+    timeouts.WriteTotalTimeoutConstant = 50;
+    timeouts.WriteTotalTimeoutMultiplier = 10;
+    SetCommTimeouts(hSerial, &timeouts);
+
+    return 1;
 }
 
 void enviarSerial(const char *prefixo, const char *mensagem) {
-    if (arduino != NULL) {
-        fprintf(arduino, "%s%s\n", prefixo, mensagem);
-        fflush(arduino);
-    }
+    if (hSerial == INVALID_HANDLE_VALUE) return;
+
+    char buffer[64];
+    snprintf(buffer, sizeof(buffer), "%s%s\n", prefixo, mensagem);
+    DWORD bytesEscritos;
+    WriteFile(hSerial, buffer, strlen(buffer), &bytesEscritos, NULL);
 }
 
 void fecharSerial() {
-    if (arduino != NULL) {
-        fclose(arduino);
-        arduino = NULL;
+    if (hSerial != INVALID_HANDLE_VALUE) {
+        CloseHandle(hSerial);
+        hSerial = INVALID_HANDLE_VALUE;
     }
 }
