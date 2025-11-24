@@ -12,18 +12,8 @@ void cadastrarUsuario(const char *nome, const char *senha) {
         strcpy(usuarios[totalUsuarios].senha, senha);
         totalUsuarios++;
 
-        
         enviarSerial("CADASTRO:", senha);
     } else {
         printf("Limite de usuarios atingido!\n");
     }
-}
-
-int validarUsuario(const char *senha) {
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strcmp(usuarios[i].senha, senha) == 0) {
-            return 1; 
-        }
-    }
-    return 0; 
 }
