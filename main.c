@@ -6,12 +6,14 @@
 #include "serial.h"
 #include "log.h"
 
+
 #define RESET   "\033[0m"
 #define RED     "\033[1;31m"
 #define GREEN   "\033[1;32m"
 #define YELLOW  "\033[1;33m"
 #define BLUE    "\033[1;34m"
 #define CYAN    "\033[1;36m"
+
 
 void limparTela() {
 #ifdef _WIN32
@@ -21,10 +23,12 @@ void limparTela() {
 #endif
 }
 
-void lerLinha(char *buffer, int size) {
-    if (fgets(buffer, size, stdin))
-        buffer[strcspn(buffer, "\n")] = 0;
+
+void lerLinha(char *buffer, int tamanho) {
+    if (fgets(buffer, tamanho, stdin))
+        buffer[strcspn(buffer, "\n")] = 0; 
 }
+
 
 void mostrarMenu() {
     printf(BLUE "+-----------------------------+\n" RESET);
@@ -38,10 +42,7 @@ void mostrarMenu() {
 }
 
 int main() {
-    setlocale(LC_ALL, "Portuguese_Brazil.1252");
-
-    int c;
-    while ((c = getchar()) != '\n' && c != EOF) {}
+    setlocale(LC_ALL, "Portuguese_Brazil.1252"); 
 
     char nome[50], senha[50];
 
@@ -67,6 +68,7 @@ int main() {
 
     if (!abrirSerial("\\\\.\\COM3")) {
         printf(RED "Erro ao abrir porta COM3\n" RESET);
+        printf("Pressione ENTER para sair...");
         getchar();
         return 1;
     }
@@ -98,6 +100,7 @@ int main() {
                 alterarSenha(nomeAlt, novaSenha);
                 salvarUsuariosEmArquivo();
                 registrarLog("Senha de usuario alterada");
+                printf(GREEN "Senha alterada com sucesso!\n" RESET);
                 break;
             }
 
@@ -115,22 +118,25 @@ int main() {
                 enviarCadastroUsuario(nomeNovo, senhaNovo, nivel);
                 salvarUsuariosEmArquivo();
                 registrarLog("Usuario cadastrado via admin");
+                printf(GREEN "Usuário cadastrado com sucesso!\n" RESET);
                 break;
             }
 
             case 4:
-                printf("Saindo...\n");
+                printf(BLUE "Encerrando painel admin...\n" RESET);
                 break;
 
             default:
-                printf(RED "Opção inválida!\n" RESET);
+                printf(RED "Opção inválida! Tente novamente.\n" RESET);
                 break;
         }
+
+        printf("\n");
 
     } while (opcao != 4);
 
     fecharSerial();
     printf("Pressione ENTER para sair...");
-    getchar();
+    getchar(); 
     return 0;
 }
