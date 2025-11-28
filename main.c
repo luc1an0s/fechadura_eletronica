@@ -41,6 +41,15 @@ void mostrarMenu() {
     printf(YELLOW "Escolha: " RESET);
 }
 
+// Função para processar mensagens recebidas do Arduino
+void processarMensagemArduino(const char *mensagem) {
+    // Aqui você pode adicionar a lógica para interpretar as mensagens do Arduino
+    // Por exemplo, se o Arduino enviar "STATUS:FECHADURA_ABERTA"
+    
+    printf(GREEN "\n[ARDUINO] Mensagem recebida: %s\n" RESET, mensagem);
+    registrarLog(mensagem); // Registra a mensagem do Arduino no log
+}
+
 int main() {
     setlocale(LC_ALL, "Portuguese_Brazil.1252"); 
 
@@ -66,6 +75,7 @@ int main() {
     printf(GREEN "Login admin bem-sucedido!\n" RESET);
     registrarLog("Login admin bem-sucedido");
 
+    // A porta COM3 deve ser alterada para a porta correta do seu Arduino
     if (!abrirSerial("\\\\.\\COM3")) {
         printf(RED "Erro ao abrir porta COM3\n" RESET);
         printf("Pressione ENTER para sair...");
@@ -77,12 +87,15 @@ int main() {
 
     int opcao = 0;
     char opcaoStr[10];
+    char serialBuffer[128]; // Buffer para receber dados do Arduino
 
     do {
+        // Tenta ler a entrada do usuário
         mostrarMenu();
         lerLinha(opcaoStr, sizeof(opcaoStr));
         opcao = atoi(opcaoStr);
 
+        // Processa a opção do menu
         switch (opcao) {
             case 1:
                 limparTela();
@@ -132,6 +145,12 @@ int main() {
         }
 
         printf("\n");
+        
+        // **NOVA LÓGICA: Verifica se há dados do Arduino**
+        int bytesLidos = receberSerial(serialBuffer, sizeof(serialBuffer));
+        if (bytesLidos > 0) {
+            processarMensagemArduino(serialBuffer);
+        }
 
     } while (opcao != 4);
 
