@@ -79,6 +79,17 @@ int main() {
     char opcaoStr[10];
 
     do {
+        // -----------------------
+        // Leitura da Serial Arduino
+        char buffer[128];
+        DWORD bytesLidos;
+        if(ReadFile(hSerial, buffer, sizeof(buffer)-1, &bytesLidos, NULL) && bytesLidos > 0) {
+            buffer[bytesLidos] = '\0';
+            printf("Arduino: %s\n", buffer);
+            registrarLog(buffer);
+        }
+        // -----------------------
+
         mostrarMenu();
         lerLinha(opcaoStr, sizeof(opcaoStr));
         opcao = atoi(opcaoStr);
