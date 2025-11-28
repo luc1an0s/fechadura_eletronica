@@ -66,8 +66,8 @@ int main() {
     printf(GREEN "Login admin bem-sucedido!\n" RESET);
     registrarLog("Login admin bem-sucedido");
 
-    if (!abrirSerial("\\\\.\\COM3")) {
-        printf(RED "Erro ao abrir porta COM3\n" RESET);
+    if (!abrirSerial("\\\\.\\COM5")) {
+        printf(RED "Erro ao abrir porta COM\n" RESET);
         printf("Pressione ENTER para sair...");
         getchar();
         return 1;
