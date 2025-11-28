@@ -22,3 +22,7 @@
 [28/11/2025 16:03:11] Login admin bem-sucedido
 [28/11/2025 16:03:28] Usuario cadastrado via admin
 [28/11/2025 16:07:44] Login admin bem-sucedido
+[28/11/2025 16:19:02] Login admin bem-sucedido
+[28/11/2025 16:19:17] Senha de usuario alterada
+[28/11/2025 16:23:11] Login admin bem-sucedido
+[28/11/2025 16:23:24] Senha de usuario alterada
