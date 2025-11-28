@@ -44,9 +44,7 @@ void setup() {
 
 void loop() {
 
-  // -------------------------------
   // Leitura do teclado
-  // -------------------------------
   char key = keypad.getKey();
   if (key) {
     if (key == '#') {
@@ -81,12 +79,12 @@ void loop() {
   if (Serial.available()) {
     String comando = Serial.readStringUntil('\n');
 
-    comando.replace("\r", "");  // remove CR (Windows)
-    comando.trim();             // remove espaços ou lixo
+    comando.replace("\r", "");  
+    comando.trim();             
 
     if (comando.startsWith("CADASTRO:")) {
       cadastrarUsuario(comando);
-      Serial.println("OK");     // ACK para o PC
+      Serial.println("OK");     
     }
   }
 }
@@ -124,7 +122,7 @@ void cadastrarUsuario(String comando) {
   String senha = comando.substring(p1+1, p2);
   String nivel = comando.substring(p2+1);
 
-  // Atualizar usuário existente?
+
   for (int i = 0; i < totalUsuarios; i++) {
     if (usuarios[i].nome == nome) {
       usuarios[i].senha = senha;

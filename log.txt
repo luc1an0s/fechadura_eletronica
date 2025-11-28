@@ -18,3 +18,7 @@
 [24/11/2025 16:56:29] Login admin bem-sucedido
 [24/11/2025 17:00:59] Login admin bem-sucedido
 [24/11/2025 17:01:48] Login admin bem-sucedido
+[28/11/2025 16:03:02] Tentativa de login admin falhou
+[28/11/2025 16:03:11] Login admin bem-sucedido
+[28/11/2025 16:03:28] Usuario cadastrado via admin
+[28/11/2025 16:07:44] Login admin bem-sucedido
