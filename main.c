@@ -34,9 +34,9 @@ void mostrarMenu() {
     printf(BLUE "+-----------------------------+\n" RESET);
     printf(BLUE "|        PAINEL ADMIN         |\n" RESET);
     printf(BLUE "+-----------------------------+\n" RESET);
-    printf(CYAN "1 - Ver usuários cadastrados\n");
-    printf("2 - Alterar senha de usuário\n");
-    printf("3 - Cadastrar novo usuário\n");
+    printf(CYAN "1 - Ver usuarios cadastrados\n");
+    printf("2 - Alterar senha de usuario\n");
+    printf("3 - Cadastrar novo usuario\n");
     printf("4 - Sair\n" RESET);
     printf(YELLOW "Escolha: " RESET);
 }
