@@ -1,10 +1,2 @@
-CC = gcc
-CFLAGS = -Wall
-
-OBJ = main.o usuario.o log.o serial.o
-
-fechadura: $(OBJ)
-    $(CC) $(CFLAGS) -o fechadura $(OBJ)
-
-clean:
-    rm -f *.o fechadura
+all:
+    gcc main.c usuario.c serial.c log.c -o painel_admin
