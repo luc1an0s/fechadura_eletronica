@@ -10,7 +10,7 @@ void enviarCadastroUsuario(const char *nome, const char *senha, const char *nive
     char comando[128];
     int encontrado = 0;
 
-    
+
     for (int i = 0; i < totalUsuarios; i++) {
         if (strcmp(usuarios[i].nome, nome) == 0) {
             strcpy(usuarios[i].senha, senha);
@@ -20,7 +20,7 @@ void enviarCadastroUsuario(const char *nome, const char *senha, const char *nive
         }
     }
 
-    
+
     if (!encontrado && totalUsuarios < 50) {
         strcpy(usuarios[totalUsuarios].nome, nome);
         strcpy(usuarios[totalUsuarios].senha, senha);
@@ -28,7 +28,7 @@ void enviarCadastroUsuario(const char *nome, const char *senha, const char *nive
         totalUsuarios++;
     }
 
-   
+
     snprintf(comando, sizeof(comando), "%s;%s;%s", nome, senha, nivel);
     enviarSerial("CADASTRO:", comando);
 }
@@ -47,7 +47,7 @@ void alterarSenha(const char *nome, const char *novaSenha) {
 
     for (int i = 0; i < totalUsuarios; i++) {
         if (strcmp(usuarios[i].nome, nome) == 0) {
-            
+
             strcpy(usuarios[i].senha, novaSenha);
 
             snprintf(comando, sizeof(comando), "%s;%s;%s",
@@ -97,4 +97,37 @@ void carregarUsuariosDoArquivo() {
     }
 
     fclose(f);
+}
+
+int deletarUsuario(const char *nome) {
+    int posicao = -1;
+
+    //Procura onde está o usuário
+    for (int i = 0; i < totalUsuarios; i++) {
+        if (strcmp(usuarios[i].nome, nome) == 0) {
+            posicao = i;
+            break;
+        }
+    }
+
+    //Se não achou, retorna 0 (errro)
+    if (posicao == -1) return 0;
+
+    //Remove e puxa todo mundo para trás (Shift)
+    for (int i = posicao; i < totalUsuarios - 1; i++) {
+        usuarios[i] = usuarios[i + 1]; //Copia o próximo para a posição atual
+    }
+
+    //Diminui o total
+    totalUsuarios--;
+
+    //Salva a nova lista no arquivo
+    salvarUsuariosEmArquivo();
+
+    //Envia comando para o Arduino
+    char comando[128];
+    snprintf(comando, sizeof(comando), "%s", nome);
+    enviarSerial("DELETAR:", comando);
+
+    return 1;// Sucesso
 }
