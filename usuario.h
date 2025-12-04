@@ -15,5 +15,6 @@ void listarUsuarios();
 void alterarSenha(const char *nome, const char *novaSenha);
 void salvarUsuariosEmArquivo();
 void carregarUsuariosDoArquivo();
+int deletarUsuario(const char *nome);
 
 #endif
