@@ -1,2 +1,2 @@
-Luciano;1234;usuario
-Gabriel;101086;usuario
+teste;1234;usuario;474e8b2e
+teste3;123;usuario;14a6c9a7
