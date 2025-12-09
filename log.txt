@@ -1,45 +1,6 @@
-[24/11/2025 15:47:37] Login admin bem-sucedido
-[24/11/2025 15:47:52] Usuario cadastrado via admin
-[24/11/2025 15:53:39] Login admin bem-sucedido
-[24/11/2025 15:53:55] Usuario cadastrado via admin
-[24/11/2025 16:02:51] Login admin bem-sucedido
-[24/11/2025 16:03:05] Usuario cadastrado via admin
-[24/11/2025 16:06:02] Login admin bem-sucedido
-[24/11/2025 16:06:16] Senha de usuario alterada
-[24/11/2025 16:17:36] Login admin bem-sucedido
-[24/11/2025 16:36:40] Login admin bem-sucedido
-[24/11/2025 16:47:24] Login admin bem-sucedido
-[24/11/2025 16:48:46] Login admin bem-sucedido
-[24/11/2025 16:48:53] Login admin bem-sucedido
-[24/11/2025 16:50:36] Login admin bem-sucedido
-[24/11/2025 16:52:11] Login admin bem-sucedido
-[24/11/2025 16:54:13] Login admin bem-sucedido
-[24/11/2025 16:55:57] Login admin bem-sucedido
-[24/11/2025 16:56:29] Login admin bem-sucedido
-[24/11/2025 17:00:59] Login admin bem-sucedido
-[24/11/2025 17:01:48] Login admin bem-sucedido
-[28/11/2025 16:03:02] Tentativa de login admin falhou
-[28/11/2025 16:03:11] Login admin bem-sucedido
-[28/11/2025 16:03:28] Usuario cadastrado via admin
-[28/11/2025 16:07:44] Login admin bem-sucedido
-[28/11/2025 16:19:02] Login admin bem-sucedido
-[28/11/2025 16:19:17] Senha de usuario alterada
-[28/11/2025 16:23:11] Login admin bem-sucedido
-[28/11/2025 16:23:24] Senha de usuario alterada
-[28/11/2025 16:28:46] Login admin bem-sucedido
-[28/11/2025 16:29:56] Senha de usuario alterada
-[28/11/2025 16:34:22] Login admin bem-sucedido
-[28/11/2025 16:34:46] Login admin bem-sucedido
-[28/11/2025 16:34:56] Login admin bem-sucedido
-[28/11/2025 18:14:52] Login admin bem-sucedido
-[28/11/2025 18:15:17] Senha de usuario alterada
-[28/11/2025 18:27:42] Login admin bem-sucedido
-[28/11/2025 18:28:20] Senha de usuario alterada
-[28/11/2025 18:30:56] Login admin bem-sucedido
-[28/11/2025 18:31:17] Senha de usuario alterada
-[28/11/2025 18:42:42] Login admin bem-sucedido
-[28/11/2025 18:42:51] Senha de usuario alterada
-[28/11/2025 18:44:35] Login admin bem-sucedido
-[28/11/2025 18:45:28] Senha de usuario alterada
-[28/11/2025 18:48:19] Usuario cadastrado via admin
-[28/11/2025 18:48:39] Login admin bem-sucedido
+[2025-12-09 13:20:52] Login admin bem-sucedido
+[2025-12-09 13:22:53] Login admin bem-sucedido
+[2025-12-09 13:22:58] LOG:ENTRADA;988;teste3;RFID;usuario
+[2025-12-09 13:24:55] Login admin bem-sucedido
+[2025-12-09 13:24:59] LOG:ERRO;1110;DESCONHECIDO;RFID_INVALIDO;73b6b91b
+[2025-12-09 13:25:02] LOG:ENTRADA;1114;teste3;RFID;usuario

@@ -1,23 +1,14 @@
-# Nome do executável
 TARGET = painel_admin.exe
-
-# Compilador
 CC = gcc
-
-# Flags de compilação
-CFLAGS = -Wall
-
-# Arquivos fonte
-SRCS = main.c usuario.c serial.c log.c
-
-# Arquivos objeto
+CFLAGS = -Wall -mwindows -fexec-charset=UTF-8 -finput-charset=UTF-8
+SRCS = src/main.c src/usuario.c src/serial.c src/log.c
 OBJS = $(SRCS:.c=.o)
+LIBS = -lcomctl32
 
-# Regra principal
 all: $(TARGET)
 
 $(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $@ $^
+	$(CC) $(CFLAGS) -o $@ $^ $(LIBS)
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
