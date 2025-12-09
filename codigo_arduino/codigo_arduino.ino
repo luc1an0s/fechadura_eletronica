@@ -5,7 +5,7 @@
 
 #define MAX_USUARIOS 10
 #define BUZZER_PIN 10
-#define SERVO_PIN 11   
+#define SERVO_PIN A0   
 
 struct Usuario {
   String nome;
