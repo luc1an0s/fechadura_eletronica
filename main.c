@@ -6,14 +6,12 @@
 #include "serial.h"
 #include "log.h"
 
-
 #define RESET   "\033[0m"
 #define RED     "\033[1;31m"
 #define GREEN   "\033[1;32m"
 #define YELLOW  "\033[1;33m"
 #define BLUE    "\033[1;34m"
 #define CYAN    "\033[1;36m"
-
 
 void limparTela() {
 #ifdef _WIN32
@@ -23,12 +21,10 @@ void limparTela() {
 #endif
 }
 
-
 void lerLinha(char *buffer, int tamanho) {
     if (fgets(buffer, tamanho, stdin))
-        buffer[strcspn(buffer, "\n")] = 0; 
+        buffer[strcspn(buffer, "\n")] = 0;
 }
-
 
 void mostrarMenu() {
     printf(BLUE "+-----------------------------+\n" RESET);
@@ -42,7 +38,7 @@ void mostrarMenu() {
 }
 
 int main() {
-    setlocale(LC_ALL, "Portuguese_Brazil.1252"); 
+    setlocale(LC_ALL, "Portuguese_Brazil.1252");
 
     char nome[50], senha[50];
 
@@ -105,7 +101,9 @@ int main() {
             }
 
             case 3: {
-                char nomeNovo[50], senhaNovo[50], nivel[20];
+                char nomeNovo[50], senhaNovo[50], nivel[20], opc;
+                char resposta[10];
+
                 printf("Nome: ");
                 lerLinha(nomeNovo, 50);
 
@@ -115,10 +113,50 @@ int main() {
                 printf("Nivel (usuario/admin): ");
                 lerLinha(nivel, 20);
 
-                enviarCadastroUsuario(nomeNovo, senhaNovo, nivel);
-                salvarUsuariosEmArquivo();
-                registrarLog("Usuario cadastrado via admin");
-                printf(GREEN "Usuário cadastrado com sucesso!\n" RESET);
+                printf("Usuário tem PIN RFID? (S/N): ");
+                lerLinha(resposta, 10);
+
+                if (toupper(resposta[0]) == 'S') {
+                    printf("Aproxime o cartão ao leitor...\n");
+
+                    enviarSerial("LER_RFID");
+
+                    char buffer[100];
+                    int lidos = lerSerial(buffer, 100);
+
+                    if (lidos > 0 && strstr(buffer, "RFID:")) {
+                        char uid[50];
+                        strcpy(uid, buffer + 5);
+
+                        enviarCadastroUsuarioRFID(nomeNovo, senhaNovo, nivel, uid);
+
+                        strcpy(usuarios[totalUsuarios].nome, nomeNovo);
+                        strcpy(usuarios[totalUsuarios].senha, senhaNovo);
+                        strcpy(usuarios[totalUsuarios].nivel, nivel);
+                        strcpy(usuarios[totalUsuarios].uid, uid);
+                        totalUsuarios++;
+
+                        salvarUsuariosEmArquivo();
+                        registrarLog("Usuario + RFID cadastrado");
+
+                        printf(GREEN "Usuário cadastrado com RFID!\n" RESET);
+                    }
+
+                } else {
+                    enviarCadastroUsuario(nomeNovo, senhaNovo, nivel);
+
+                    strcpy(usuarios[totalUsuarios].nome, nomeNovo);
+                    strcpy(usuarios[totalUsuarios].senha, senhaNovo);
+                    strcpy(usuarios[totalUsuarios].nivel, nivel);
+                    strcpy(usuarios[totalUsuarios].uid, "");
+                    totalUsuarios++;
+
+                    salvarUsuariosEmArquivo();
+                    registrarLog("Usuario cadastrado sem RFID");
+
+                    printf(GREEN "Usuário cadastrado com sucesso!\n" RESET);
+                }
+
                 break;
             }
 
@@ -137,6 +175,7 @@ int main() {
 
     fecharSerial();
     printf("Pressione ENTER para sair...");
-    getchar(); 
+    getchar();
+
     return 0;
 }

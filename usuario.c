@@ -1,100 +1,82 @@
 #include <stdio.h>
 #include <string.h>
+#include <stdlib.h>
 #include "usuario.h"
 #include "serial.h"
+
+#define ARQUIVO "usuarios.txt"
+
+typedef struct {
+    char nome[50];
+    char senha[50];
+    char nivel[20];
+    char uid[40];
+} Usuario;
 
 Usuario usuarios[50];
 int totalUsuarios = 0;
 
-void enviarCadastroUsuario(const char *nome, const char *senha, const char *nivel) {
-    char comando[128];
-    int encontrado = 0;
+void carregarUsuariosDoArquivo() {
+    FILE *f = fopen(ARQUIVO, "r");
+    if (!f) return;
 
-    
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strcmp(usuarios[i].nome, nome) == 0) {
-            strcpy(usuarios[i].senha, senha);
-            strcpy(usuarios[i].nivel, nivel);
-            encontrado = 1;
-            break;
-        }
-    }
+    totalUsuarios = 0;
 
-    
-    if (!encontrado && totalUsuarios < 50) {
-        strcpy(usuarios[totalUsuarios].nome, nome);
-        strcpy(usuarios[totalUsuarios].senha, senha);
-        strcpy(usuarios[totalUsuarios].nivel, nivel);
+    while (!feof(f)) {
+        fscanf(f, "%49[^;];%49[^;];%19[^;];%39[^\n]\n",
+               usuarios[totalUsuarios].nome,
+               usuarios[totalUsuarios].senha,
+               usuarios[totalUsuarios].nivel,
+               usuarios[totalUsuarios].uid);
+
         totalUsuarios++;
     }
 
-   
-    snprintf(comando, sizeof(comando), "%s;%s;%s", nome, senha, nivel);
-    enviarSerial("CADASTRO:", comando);
+    fclose(f);
+}
+
+void salvarUsuariosEmArquivo() {
+    FILE *f = fopen(ARQUIVO, "w");
+    if (!f) return;
+
+    for (int i = 0; i < totalUsuarios; i++) {
+        fprintf(f, "%s;%s;%s;%s\n",
+                usuarios[i].nome,
+                usuarios[i].senha,
+                usuarios[i].nivel,
+                usuarios[i].uid);
+    }
+
+    fclose(f);
 }
 
 void listarUsuarios() {
-    printf("\n--- Usuarios cadastrados ---\n");
+    printf("\n--- USUÁRIOS CADASTRADOS ---\n");
     for (int i = 0; i < totalUsuarios; i++) {
-        printf("Nome: %s | Nivel: %s\n",
+        printf("Nome: %s | Nivel: %s | RFID: %s\n",
                usuarios[i].nome,
-               usuarios[i].nivel);
+               usuarios[i].nivel,
+               strlen(usuarios[i].uid) ? usuarios[i].uid : "(nenhum)");
     }
 }
 
 void alterarSenha(const char *nome, const char *novaSenha) {
-    char comando[128];
-
     for (int i = 0; i < totalUsuarios; i++) {
         if (strcmp(usuarios[i].nome, nome) == 0) {
-            
             strcpy(usuarios[i].senha, novaSenha);
-
-            snprintf(comando, sizeof(comando), "%s;%s;%s",
-                     usuarios[i].nome,
-                     usuarios[i].senha,
-                     usuarios[i].nivel);
-
-            enviarSerial("CADASTRO:", comando);
             return;
         }
     }
-
-    printf("Usuario %s nao encontrado!\n", nome);
 }
 
-
-
-void salvarUsuariosEmArquivo() {
-    FILE *f = fopen("usuarios.txt", "w");
-    if (!f) return;
-
-    for (int i = 0; i < totalUsuarios; i++) {
-        fprintf(f, "%s;%s;%s\n",
-                usuarios[i].nome,
-                usuarios[i].senha,
-                usuarios[i].nivel);
-    }
-
-    fclose(f);
+void enviarCadastroUsuario(const char *nome, const char *senha, const char *nivel) {
+    char comando[200];
+    sprintf(comando, "CADASTRO:%s;%s;%s", nome, senha, nivel);
+    enviarSerial(comando);
 }
 
-void carregarUsuariosDoArquivo() {
-    FILE *f = fopen("usuarios.txt", "r");
-    if (!f) return;
-
-    char linha[128];
-
-    while (fgets(linha, sizeof(linha), f)) {
-        char nome[50], senha[20], nivel[20];
-
-        sscanf(linha, "%49[^;];%19[^;];%19[^\n]", nome, senha, nivel);
-
-        strcpy(usuarios[totalUsuarios].nome, nome);
-        strcpy(usuarios[totalUsuarios].senha, senha);
-        strcpy(usuarios[totalUsuarios].nivel, nivel);
-        totalUsuarios++;
-    }
-
-    fclose(f);
+void enviarCadastroUsuarioRFID(const char *nome, const char *senha, const char *nivel, const char *uid) {
+    char comando[250];
+    sprintf(comando, "CADASTRO_RFID:%s;%s;%s;%s", nome, senha, nivel, uid);
+    enviarSerial(comando);
 }
