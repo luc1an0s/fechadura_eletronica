@@ -43,11 +43,20 @@ void mostrarMenu() {
 
 // Função para processar mensagens recebidas do Arduino
 void processarMensagemArduino(const char *mensagem) {
-    // Aqui você pode adicionar a lógica para interpretar as mensagens do Arduino
-    // Por exemplo, se o Arduino enviar "STATUS:FECHADURA_ABERTA"
+    const char *prefixo_display = "[DISPLAY]: ";
+    size_t len_prefixo = strlen(prefixo_display);
     
+    // 1. Saída para o Console (Mantém o prefixo para clareza)
     printf(GREEN "\n[ARDUINO] Mensagem recebida: %s\n" RESET, mensagem);
-    registrarLog(mensagem); // Registra a mensagem do Arduino no log
+    
+    // 2. Saída para o Log (Remove o prefixo)
+    if (strncmp(mensagem, prefixo_display, len_prefixo) == 0) {
+        // Se a mensagem começar com "DISPLAY:", registra o restante da string
+        registrarLog(mensagem + len_prefixo);
+    } else {
+        // Caso contrário, registra a mensagem completa (como LOGIN:, USUARIO:, etc.)
+        registrarLog(mensagem);
+    }
 }
 
 int main() {
@@ -76,7 +85,7 @@ int main() {
     registrarLog("Login admin bem-sucedido");
 
     // A porta COM3 deve ser alterada para a porta correta do seu Arduino
-    if (!abrirSerial("\\\\.\\COM3")) {
+    if (!abrirSerial("\\\\.\\COM5")) {
         printf(RED "Erro ao abrir porta COM3\n" RESET);
         printf("Pressione ENTER para sair...");
         getchar();
