@@ -3,7 +3,7 @@
 
 void setupSerial(const char* porta);
 void enviarComando(char cmd);
-void enviarStringSerial(const char* str); // <--- NOVA
+void enviarStringSerial(const char* str); 
 int lerSerial(char* buffer, int max);
 void fecharSerial();
 void abrirPastaLocal();
