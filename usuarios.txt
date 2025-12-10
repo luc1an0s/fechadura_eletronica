@@ -1,2 +1,8 @@
-teste;1234;usuario;474e8b2e
-teste3;123;usuario;14a6c9a7
+999;Admin Master;admin;2;;Codigo Mestre?;0000
+99;icaro;1234;1;;Indefinido;Indefinido
+40;fabio;1234;1;;a;a
+37;castro;5070;1;;Indefinido;Indefinido
+30;jose;9999;1;;Indefinido;Indefinido
+20;yago;4500;1;;Indefinido;Indefinido
+15;theodoro;3577;1;;Indefinido;Indefinido
+1;joao;1111;1;;Indefinido;Indefinido

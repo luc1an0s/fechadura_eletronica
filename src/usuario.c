@@ -1,159 +1,258 @@
-// gerenciamento de usuarios da fechadura
+#include "usuario.h"
+#include "serial_port.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "usuario.h"
-#include "log.h"
-#include "serial.h"
 
-Usuario usuarios[MAX_USUARIOS]; // array gigante de usuarios
-int totalUsuarios = 0; // contador de quantos tem cadastrado
+// Includes para o delay (usleep/Sleep)
+#ifdef _WIN32
+    #include <windows.h>
+#else
+    #include <unistd.h>
+#endif
 
-// carrega os usuarios do arquivo txt (sim, banco de dados é arquivo txt mesmo)
-void carregarUsuariosDoArquivo() {
-    FILE *f = fopen("usuarios.txt", "r");
-    if (!f) return; // arquivo nao existe? foda-se, cria depois
+static Usuario lista[MAX_USUARIOS];
+static int total = 0;
 
-    totalUsuarios = 0;
-    // le linha por linha com esse formato esquisito de ; separando tudo
-    while (fscanf(f, "%49[^;];%49[^;];%19[^;];%49[^\n]\n",
-                  usuarios[totalUsuarios].nome,
-                  usuarios[totalUsuarios].senha,
-                  usuarios[totalUsuarios].nivel,
-                  usuarios[totalUsuarios].uid) == 4) {
-        totalUsuarios++;
-        if (totalUsuarios >= MAX_USUARIOS) break; // lotou? para ai mesmo
-    }
-    fclose(f);
+// --- Função de Comparação para Ordenar (Maior ID primeiro) ---
+int compararUsuariosDesc(const void* a, const void* b) {
+    Usuario* u1 = (Usuario*)a;
+    Usuario* u2 = (Usuario*)b;
+    return (u2->id - u1->id); // Decrescente
 }
 
-// salva tudo de volta no arquivo (sobrescreve tudo, foda-se)
-void salvarUsuariosEmArquivo() {
+void ordenarLista(void) {
+    if (total > 1) {
+        qsort(lista, total, sizeof(Usuario), compararUsuariosDesc);
+    }
+}
+
+// --- Parser de Texto ---
+static void extrairCampo(char **cursor, char *destino, int tamanhoMax) {
+    if (*cursor == NULL || **cursor == '\0') {
+        destino[0] = '\0';
+        return;
+    }
+    char *fim = strchr(*cursor, ';');
+    if (fim != NULL) {
+        int len = fim - *cursor;
+        if (len >= tamanhoMax) len = tamanhoMax - 1;
+        strncpy(destino, *cursor, len);
+        destino[len] = '\0';
+        *cursor = fim + 1;
+    } else {
+        strncpy(destino, *cursor, tamanhoMax - 1);
+        destino[tamanhoMax - 1] = '\0';
+        *cursor = NULL;
+    }
+}
+
+void salvarDados(void) {
+    ordenarLista(); 
     FILE *f = fopen("usuarios.txt", "w");
-    if (!f) return; // nao conseguiu abrir? problema seu
-
-    for (int i = 0; i < totalUsuarios; i++) {
-        fprintf(f, "%s;%s;%s;%s\n",
-                usuarios[i].nome,
-                usuarios[i].senha,
-                usuarios[i].nivel,
-                usuarios[i].uid);
+    if (f) {
+        for (int i = 0; i < total; i++) {
+            fprintf(f, "%d;%s;%s;%d;%s;%s;%s\n",
+                    lista[i].id, lista[i].nome, lista[i].senha, lista[i].nivel,
+                    lista[i].uid, lista[i].perguntaSecret, lista[i].respostaSecret);
+        }
+        fclose(f);
     }
+}
+
+void carregarDados(void) {
+    FILE *f = fopen("usuarios.txt", "r");
+    if (!f) return;
+
+    total = 0;
+    char linha[512];
+    while (fgets(linha, sizeof(linha), f) && total < MAX_USUARIOS) {
+        linha[strcspn(linha, "\n")] = 0;
+        if (strlen(linha) == 0) continue;
+
+        Usuario u;
+        char *cursor = linha;
+        char bufferTemp[100];
+
+        extrairCampo(&cursor, bufferTemp, sizeof(bufferTemp));
+        u.id = atoi(bufferTemp);
+        extrairCampo(&cursor, u.nome, sizeof(u.nome));
+        extrairCampo(&cursor, u.senha, sizeof(u.senha));
+        extrairCampo(&cursor, bufferTemp, sizeof(bufferTemp));
+        u.nivel = atoi(bufferTemp);
+        extrairCampo(&cursor, u.uid, sizeof(u.uid));
+        extrairCampo(&cursor, u.perguntaSecret, sizeof(u.perguntaSecret));
+        extrairCampo(&cursor, u.respostaSecret, sizeof(u.respostaSecret));
+
+        if (u.id > 0 && strlen(u.nome) > 0) {
+            lista[total] = u;
+            total++;
+        }
+    }
+    fclose(f);
+    ordenarLista();
+}
+
+void inicializarSistema(void) {
+    carregarDados();
+    if (total == 0) {
+        cadastrarUsuario(999, "Admin Master", "admin", 2, "", "Codigo Mestre?", "0000");
+    }
+}
+
+int cadastrarUsuario(int id, const char* nome, const char* senha, int nivel, const char* uid, const char* perg, const char* resp) {
+    if (total >= MAX_USUARIOS) return 0;
+    
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id) return -1; 
+        if (strcmp(lista[i].senha, senha) == 0) return -2; 
+    }
+
+    lista[total].id = id;
+    lista[total].nivel = nivel;
+    strcpy(lista[total].nome, nome);
+    strcpy(lista[total].senha, senha);
+    strcpy(lista[total].uid, uid);
+    strcpy(lista[total].perguntaSecret, perg);
+    strcpy(lista[total].respostaSecret, resp);
+
+    // Envia para o Arduino
+    char comandoArduino[256];
+    const char* nivelStr = (nivel == 2) ? "ADMIN" : "COMUM";
+
+    if (strlen(uid) > 0) {
+        sprintf(comandoArduino, "CADASTRO_RFID:%d;%s;%s;%s;%s\n", id, nome, senha, nivelStr, uid);
+    } else {
+        sprintf(comandoArduino, "CADASTRO:%d;%s;%s;%s\n", id, nome, senha, nivelStr);
+    }
+
+    for (int k = 0; comandoArduino[k] != '\0'; k++) {
+        enviarComando(comandoArduino[k]);
+    }
+
+    total++;
+    salvarDados();
+    return 1;
+}
+
+int deletarUsuario(int id) {
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id) {
+            for (int j = i; j < total - 1; j++) {
+                lista[j] = lista[j + 1];
+            }
+            total--;
+            salvarDados();
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int verificarLogin(int id, const char* senha) {
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id && strcmp(lista[i].senha, senha) == 0) {
+            return lista[i].nivel;
+        }
+    }
+    return -1;
+}
+
+int buscarPergunta(int id, char* bufferPergunta) {
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id) {
+            strcpy(bufferPergunta, lista[i].perguntaSecret);
+            return 1;
+        }
+    }
+    return 0;
+}
+
+int verificarRecuperacao(int id, const char* respostaTentada) {
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id && strcmp(lista[i].respostaSecret, respostaTentada) == 0) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+void alterarSenha(int id, const char* novaSenha) {
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id == id) {
+            strcpy(lista[i].senha, novaSenha);
+            salvarDados();
+            registrarLog("Senha alterada via Recuperacao");
+            return;
+        }
+    }
+}
+
+void registrarLog(const char* evento) {
+    FILE *f = fopen("acessos.log", "a");
+    if (!f) return;
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    fprintf(f, "[%02d/%02d %02d:%02d] %s\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_hour, tm.tm_min, evento);
     fclose(f);
 }
 
-// lista usuarios no console (ninguem usa isso mas ta ai)
-void listarUsuarios() {
-    printf("Usuarios cadastrados:\n");
-    for (int i = 0; i < totalUsuarios; i++) {
-        printf("Nome: %s | Senha: %s | Nivel: %s | UID: %s\n",
-               usuarios[i].nome,
-               usuarios[i].senha,
-               usuarios[i].nivel,
-               strlen(usuarios[i].uid) ? usuarios[i].uid : "(nenhum)"); // mostra (nenhum) se nao tem rfid
-    }
+void lerLog(char* buffer, int tamanhoMax) {
+    FILE *f = fopen("acessos.log", "r");
+    if (!f) { strcpy(buffer, "Sem registros."); return; }
+    int lidos = fread(buffer, 1, tamanhoMax - 1, f);
+    buffer[lidos] = '\0';
+    fclose(f);
 }
 
-// muda a senha de um usuario (obvio né)
-int alterarSenha(const char *nome, const char *novaSenha) {
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strcmp(usuarios[i].nome, nome) == 0) {
-            strcpy(usuarios[i].senha, novaSenha); // achou? muda a senha e era isso
-            return 1; // sucesso!
+int getQuantidadeUsuarios(void) { return total; }
+
+Usuario* getUsuarioPorIndice(int indice) {
+    if (indice >= 0 && indice < total) return &lista[indice];
+    return NULL;
+}
+
+int sugerirNovoId(void) {
+    int maxId = 0;
+    for (int i = 0; i < total; i++) {
+        if (lista[i].id > maxId && lista[i].id != 999) {
+            maxId = lista[i].id;
         }
     }
-    return 0; // nao achou o usuario = falha
+    return maxId + 1;
 }
 
-// cadastra usuario SEM rfid pela GUI
-int cadastrarUsuarioGUI(const char *nome, const char *senha, const char *nivel) {
-    if (totalUsuarios >= MAX_USUARIOS) return 0; // ta cheio? nao cabe mais
-    strcpy(usuarios[totalUsuarios].nome, nome);
-    strcpy(usuarios[totalUsuarios].senha, senha);
-    strcpy(usuarios[totalUsuarios].nivel, nivel);
-    strcpy(usuarios[totalUsuarios].uid, ""); // sem rfid = string vazia
-    totalUsuarios++;
-    salvarUsuariosEmArquivo();
-    registrarLog("Usuário cadastrado via GUI");
-    return 1;
-}
+// --- FUNÇÃO RESTAURADA ---
+// Envia todos os usuários para o Arduino (útil ao iniciar o sistema)
+void sincronizarUsuariosComArduino(void) {
+    if (total == 0) return;
 
-// cadastra usuario COM rfid pela GUI (diferenca é so o uid preenchido)
-int cadastrarUsuarioRFIDGUI(const char *nome, const char *senha, const char *nivel, const char *uid) {
-    if (totalUsuarios >= MAX_USUARIOS) return 0; // lotou de novo
-    strcpy(usuarios[totalUsuarios].nome, nome);
-    strcpy(usuarios[totalUsuarios].senha, senha);
-    strcpy(usuarios[totalUsuarios].nivel, nivel);
-    strcpy(usuarios[totalUsuarios].uid, uid); // aqui tem rfid porra
-    totalUsuarios++;
-    salvarUsuariosEmArquivo();
-    registrarLog("Usuário com RFID cadastrado via GUI");
-    return 1;
-}
+    printf(">>> Sincronizando %d usuarios com o Arduino...\n", total);
 
-// manda pro arduino cadastrar usuario sem rfid
-void enviarCadastroUsuario(const char *nome, const char *senha, const char *nivel) {
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "CADASTRO:%s,%s,%s", nome, senha, nivel);
-    enviarSerial(buffer); // envia pela serial
-    registrarLog(buffer); // registra que mandou
-}
+    for (int i = 0; i < total; i++) {
+        char comandoArduino[256];
+        const char* nivelStr = (lista[i].nivel == 2) ? "ADMIN" : "COMUM";
 
-// manda pro arduino cadastrar usuario COM rfid
-void enviarCadastroUsuarioRFID(const char *nome, const char *senha, const char *nivel, const char *uid) {
-    char buffer[256];
-    snprintf(buffer, sizeof(buffer), "CADASTRO_RFID:%s;%s;%s;%s", nome, senha, nivel, uid);
-    enviarSerial(buffer); // vai la arduino, grava isso ai
-    registrarLog(buffer);
-}
-
-// remove usuario pelo nome (com aquele deslocamento de array classico)
-int removerUsuario(const char *nome) {
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strcmp(usuarios[i].nome, nome) == 0) {
-            // achou! agora desloca todo mundo pra tras
-            for (int j = i; j < totalUsuarios - 1; j++) {
-                usuarios[j] = usuarios[j + 1]; // move cada um uma posicao
-            }
-            totalUsuarios--; // diminui o contador
-            salvarUsuariosEmArquivo(); // salva tudo de novo
-            registrarLog("Usuário removido via GUI");
-            return 1; // removeu com sucesso
+        if (strlen(lista[i].uid) > 0) {
+            sprintf(comandoArduino, "CADASTRO_RFID:%d;%s;%s;%s;%s\n", 
+                    lista[i].id, lista[i].nome, lista[i].senha, nivelStr, lista[i].uid);
+        } else {
+            sprintf(comandoArduino, "CADASTRO:%d;%s;%s;%s\n", 
+                    lista[i].id, lista[i].nome, lista[i].senha, nivelStr);
         }
-    }
-    return 0; // nao achou esse usuario
-}
 
-// verifica se a senha ja ta sendo usada por alguem (pra evitar duplicata)
-int verificarSenhaEmUso(const char *senha) {
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strcmp(usuarios[i].senha, senha) == 0) {
-            return 1; // ja tem alguem usando essa senha!
+        for (int k = 0; comandoArduino[k] != '\0'; k++) {
+            enviarComando(comandoArduino[k]);
         }
-    }
-    return 0; // senha livre pra usar
-}
 
-// verifica se a senha ta em uso MAS deixa o proprio usuario manter a dele
-// util quando ta alterando outros dados mas nao quer mudar a senha
-int verificarSenhaEmUsoExceto(const char *senha, const char *nomeExceto) {
-    for (int i = 0; i < totalUsuarios; i++) {
-        // se nao for o cara que ta editando E a senha for igual = problema
-        if (strcmp(usuarios[i].nome, nomeExceto) != 0 && strcmp(usuarios[i].senha, senha) == 0) {
-            return 1; // outro cara ja usa essa senha
-        }
-    }
-    return 0; // pode usar tranquilo
-}
+        printf("Enviado ID %d...\n", lista[i].id);
 
-// verifica se o UID do rfid ja ta cadastrado (pra nao ter 2 pessoas com o mesmo cartao)
-int verificarUIDEmUso(const char *uid) {
-    if (strlen(uid) == 0) return 0; // uid vazio nao conta (obvio)
-    
-    for (int i = 0; i < totalUsuarios; i++) {
-        if (strlen(usuarios[i].uid) > 0 && strcmp(usuarios[i].uid, uid) == 0) {
-            return 1; // ja tem alguem com esse cartao!
-        }
+        // Pequeno delay para não travar o buffer do Arduino
+        #ifdef _WIN32
+            Sleep(100); 
+        #else
+            usleep(100000); // 100ms
+        #endif
     }
-    return 0; // cartao novo, pode cadastrar
+    printf(">>> Sincronizacao concluida!\n");
 }
