@@ -1,3 +1,32 @@
-log.txt
-usuarios.txt
-log.txt
+# --- Arquivos de Build e Compilação (Arduino IDE) ---
+build/
+.build/
+*.hex
+*.elf
+*.bin
+*.eep
+*.d
+*.o
+*.a
+*.lst
+*.map
+*.sym
+
+# --- Diretórios antigos/temporários do Arduino ---
+applet/
+ipch/
+
+# --- Arquivos específicos do VS Code (pra extensão de Arduino) ---
+.vscode/
+*.code-workspace
+c_cpp_properties.json
+
+# --- PlatformIO ---
+.pio/
+.pioenvs/
+libdeps/
+include/README
+test/README
+
+.DS_Store
+Thumbs.db
