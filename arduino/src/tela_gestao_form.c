@@ -7,14 +7,7 @@
 void DesenharFormularioGestao(AppData* app, int x, int* y, int width) {
     int curY = *y;
     
-    // --- LÓGICA DE AUTO-SUGESTÃO DE ID ---
-    // Se o campo ID estiver vazio, preenche automaticamente com o próximo disponível
-    if (strlen(app->admId) == 0) {
-        int novo = sugerirNovoId();
-        sprintf(app->admId, "%d", novo);
-    }
-    // -------------------------------------
-
+    
     GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(WHITE));
     DrawText("Novo Cadastro", x, curY, 20, WHITE);
     curY += 40;

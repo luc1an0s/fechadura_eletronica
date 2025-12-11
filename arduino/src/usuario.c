@@ -11,7 +11,8 @@
     #include <unistd.h>
 #endif
 
-static Usuario lista[MAX_USUARIOS];
+// Ponteiro dinâmico para a lista de usuários
+static Usuario* lista = NULL; 
 static int total = 0;
 
 // --- Função de Comparação para Ordenar (Maior ID primeiro) ---
@@ -22,7 +23,7 @@ int compararUsuariosDesc(const void* a, const void* b) {
 }
 
 void ordenarLista(void) {
-    if (total > 1) {
+    if (total > 1 && lista != NULL) {
         qsort(lista, total, sizeof(Usuario), compararUsuariosDesc);
     }
 }
@@ -33,10 +34,13 @@ static void extrairCampo(char **cursor, char *destino, int tamanhoMax) {
         destino[0] = '\0';
         return;
     }
+    
     char *fim = strchr(*cursor, ';');
     if (fim != NULL) {
         int len = fim - *cursor;
-        if (len >= tamanhoMax) len = tamanhoMax - 1;
+        if (len >= tamanhoMax) {
+            len = tamanhoMax - 1;
+        }
         strncpy(destino, *cursor, len);
         destino[len] = '\0';
         *cursor = fim + 1;
@@ -48,7 +52,12 @@ static void extrairCampo(char **cursor, char *destino, int tamanhoMax) {
 }
 
 void salvarDados(void) {
+    if (!lista && total > 0) {
+        return; // Segurança
+    }
+    
     ordenarLista(); 
+    
     FILE *f = fopen("usuarios.txt", "w");
     if (f) {
         for (int i = 0; i < total; i++) {
@@ -62,13 +71,24 @@ void salvarDados(void) {
 
 void carregarDados(void) {
     FILE *f = fopen("usuarios.txt", "r");
-    if (!f) return;
+    if (!f) {
+        return;
+    }
 
-    total = 0;
+    // Limpa lista anterior se houver
+    if (lista) {
+        free(lista);
+        lista = NULL;
+        total = 0;
+    }
+
     char linha[512];
-    while (fgets(linha, sizeof(linha), f) && total < MAX_USUARIOS) {
+    while (fgets(linha, sizeof(linha), f)) {
         linha[strcspn(linha, "\n")] = 0;
-        if (strlen(linha) == 0) continue;
+        
+        if (strlen(linha) == 0) {
+            continue;
+        }
 
         Usuario u;
         char *cursor = linha;
@@ -84,7 +104,14 @@ void carregarDados(void) {
         extrairCampo(&cursor, u.perguntaSecret, sizeof(u.perguntaSecret));
         extrairCampo(&cursor, u.respostaSecret, sizeof(u.respostaSecret));
 
-        if (u.id > 0 && strlen(u.nome) > 0) {
+        if (u.id >= 0 && strlen(u.nome) > 0) {
+            // ALOCAÇÃO DINÂMICA (realloc)
+            Usuario* temp = (Usuario*)realloc(lista, (total + 1) * sizeof(Usuario));
+            if (temp == NULL) {
+                printf("Erro critico: Falha ao alocar memoria para usuarios.\n");
+                break; 
+            }
+            lista = temp;
             lista[total] = u;
             total++;
         }
@@ -93,20 +120,41 @@ void carregarDados(void) {
     ordenarLista();
 }
 
+// Função para liberar memória ao fechar o programa
+void liberarMemoria(void) {
+    if (lista) {
+        free(lista);
+        lista = NULL;
+        total = 0;
+        printf("Memoria do sistema liberada com sucesso.\n");
+    }
+}
+
 void inicializarSistema(void) {
     carregarDados();
+    // Se não carregou nada, cria o admin padrão
     if (total == 0) {
         cadastrarUsuario(999, "Admin Master", "admin", 2, "", "Codigo Mestre?", "0000");
     }
 }
 
 int cadastrarUsuario(int id, const char* nome, const char* senha, int nivel, const char* uid, const char* perg, const char* resp) {
-    if (total >= MAX_USUARIOS) return 0;
-    
+    // Verifica duplicatas
     for (int i = 0; i < total; i++) {
-        if (lista[i].id == id) return -1; 
-        if (strcmp(lista[i].senha, senha) == 0) return -2; 
+        if (lista[i].id == id) {
+            return -1; 
+        }
+        if (strcmp(lista[i].senha, senha) == 0) {
+            return -2; 
+        }
     }
+
+    // ALOCAÇÃO DINÂMICA: Aumenta o array em 1
+    Usuario* temp = (Usuario*)realloc(lista, (total + 1) * sizeof(Usuario));
+    if (!temp) {
+        return 0; // Erro de memória
+    }
+    lista = temp;
 
     lista[total].id = id;
     lista[total].nivel = nivel;
@@ -138,10 +186,23 @@ int cadastrarUsuario(int id, const char* nome, const char* senha, int nivel, con
 int deletarUsuario(int id) {
     for (int i = 0; i < total; i++) {
         if (lista[i].id == id) {
+            // Move os itens subsequentes para trás
             for (int j = i; j < total - 1; j++) {
                 lista[j] = lista[j + 1];
             }
             total--;
+
+            // ALOCAÇÃO DINÂMICA: Reduz o tamanho da memória
+            if (total > 0) {
+                Usuario* temp = (Usuario*)realloc(lista, total * sizeof(Usuario));
+                if (temp) {
+                    lista = temp;
+                }
+            } else {
+                free(lista);
+                lista = NULL;
+            }
+
             salvarDados();
             return 1;
         }
@@ -190,7 +251,9 @@ void alterarSenha(int id, const char* novaSenha) {
 
 void registrarLog(const char* evento) {
     FILE *f = fopen("acessos.log", "a");
-    if (!f) return;
+    if (!f) {
+        return;
+    }
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     fprintf(f, "[%02d/%02d %02d:%02d] %s\n", tm.tm_mday, tm.tm_mon + 1, tm.tm_hour, tm.tm_min, evento);
@@ -199,16 +262,23 @@ void registrarLog(const char* evento) {
 
 void lerLog(char* buffer, int tamanhoMax) {
     FILE *f = fopen("acessos.log", "r");
-    if (!f) { strcpy(buffer, "Sem registros."); return; }
+    if (!f) { 
+        strcpy(buffer, "Sem registros."); 
+        return; 
+    }
     int lidos = fread(buffer, 1, tamanhoMax - 1, f);
     buffer[lidos] = '\0';
     fclose(f);
 }
 
-int getQuantidadeUsuarios(void) { return total; }
+int getQuantidadeUsuarios(void) { 
+    return total; 
+}
 
 Usuario* getUsuarioPorIndice(int indice) {
-    if (indice >= 0 && indice < total) return &lista[indice];
+    if (lista && indice >= 0 && indice < total) {
+        return &lista[indice];
+    }
     return NULL;
 }
 
@@ -222,10 +292,10 @@ int sugerirNovoId(void) {
     return maxId + 1;
 }
 
-// --- FUNÇÃO RESTAURADA ---
-// Envia todos os usuários para o Arduino (útil ao iniciar o sistema)
 void sincronizarUsuariosComArduino(void) {
-    if (total == 0) return;
+    if (total == 0) {
+        return;
+    }
 
     printf(">>> Sincronizando %d usuarios com o Arduino...\n", total);
 
@@ -247,7 +317,6 @@ void sincronizarUsuariosComArduino(void) {
 
         printf("Enviado ID %d...\n", lista[i].id);
 
-        // Pequeno delay para não travar o buffer do Arduino
         #ifdef _WIN32
             Sleep(100); 
         #else

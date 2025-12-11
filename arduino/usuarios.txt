@@ -1,8 +1,13 @@
 999;Admin Master;admin;2;;Codigo Mestre?;0000
+103;Emmerson;1526;1;;Aluno favorito;Icaro
+102;joao;12345;2;;1;1
+100;Gabriel Mg;1314;1;;Sim;sim
 99;icaro;1234;1;;Indefinido;Indefinido
 40;fabio;1234;1;;a;a
 37;castro;5070;1;;Indefinido;Indefinido
 30;jose;9999;1;;Indefinido;Indefinido
+24;Gabriel Fernandes;2008;2;;Qual o namorado do Marcelo Vitor Uchoa?;Wallace
+23;Carlos;2303;1;;Indefinido;Indefinido
 20;yago;4500;1;;Indefinido;Indefinido
 15;theodoro;3577;1;;Indefinido;Indefinido
 1;joao;1111;1;;Indefinido;Indefinido

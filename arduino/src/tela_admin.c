@@ -26,7 +26,7 @@ void DesenharTelaAdmin(AppData* app, EstadoTela* telaAtual) {
     }
 
     GuiSetStyle(LABEL, TEXT_COLOR_NORMAL, ColorToInt(colTextoBranco));
-    DrawText("Cadastro Rapido (Simples)", pX + 40, pY + 80, 20, WHITE);
+    DrawText("Cadastro Rapido", pX + 40, pY + 80, 20, WHITE);
 
     GuiSetStyle(TEXTBOX, TEXT_COLOR_NORMAL, ColorToInt(colAzulNeon));
     GuiSetStyle(TEXTBOX, TEXT_COLOR_FOCUSED, ColorToInt(colAzulNeon));

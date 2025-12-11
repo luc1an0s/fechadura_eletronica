@@ -23,7 +23,7 @@ int main(void) {
 
     #ifdef _WIN32
         statusSerial = setupSerial("COM3");
-    #else flwww
+    #else 
         statusSerial = setupSerial("/dev/ttyACM0");
     #endif 
     if (statusSerial != 0) {
@@ -110,7 +110,7 @@ int main(void) {
                                 sprintf(l, "Acesso NEGADO ID %s", app.txtId); 
                                 registrarLog(l); 
                                 enviarComando('N');
-                                strcpy(app.msgLogin, "Credenciais Invalidas!");
+                                strcpy(app.msgLogin, "Acesso Negado!");
                             }
                             
                             // Limpa campos após tentativa
@@ -130,7 +130,7 @@ int main(void) {
                                 app.txtId[len+1] = 0;
                             }
                         } 
-                        else if (app.editSenha) { // <--- CORREÇÃO 2: ELSE IF EXPLÍCITO
+                        else if (app.editSenha) { 
                             // Só escreve na Senha se já tiver passado pelo ID (#)
                             int len = strlen(app.senhaReal); 
                             if (len < 19) {

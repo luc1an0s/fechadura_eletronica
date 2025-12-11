@@ -14,7 +14,7 @@
             printf("Erro Windows: Porta %s nao encontrada.\n", porta); 
             return -1; 
         }
-        
+        ;
         DCB dcb = {0}; 
         dcb.DCBlength = sizeof(dcb); 
         GetCommState(hSerial, &dcb);

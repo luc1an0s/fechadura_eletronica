@@ -70,7 +70,7 @@ void DesenharTelaLogin(AppData* app, EstadoTela* telaAtual) {
             sprintf(l, "Acesso NEGADO ID %s", app->txtId); 
             registrarLog(l);
             enviarComando('N'); 
-            strcpy(app->msgLogin, "Credenciais Invalidas!");
+            strcpy(app->msgLogin, "Acesso Negado!");
         }
         strcpy(app->senhaReal, "");
     }
