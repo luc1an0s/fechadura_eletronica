@@ -204,7 +204,7 @@ Este painel é usado para adicionar novos usuários ou editar os existentes.
 | **Botão Ler RFID** | Coloca o sistema em modo de escuta. Aproxime um cartão RFID do leitor conectado ao Arduino para associá-lo a este usuário. O UID do cartão será exibido ao lado. |
 | **Botão Salvar** | Cria um novo usuário (se o ID for novo) ou atualiza um usuário existente com as informações fornecidas. |
 | **Botão Limpar** | Limpa todos os campos do formulário. |
-| **Botão Sincronizar** | Envia a lista completa de usuários do software para a memória do Arduino. **É crucial pressionar este botão após qualquer alteração** para que o hardware reconheça novos usuários ou senhas. |
+
 
 ####  Painel de Logs do Sistema
 
