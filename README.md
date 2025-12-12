@@ -131,3 +131,111 @@ As instruções variam dependendo do seu sistema operacional.
 3.  **Verifique a Conexão Serial:** A aplicação tentará se conectar automaticamente à porta serial (`/dev/ttyACM0` no Linux, `COM3` no Windows). Se o seu Arduino estiver em uma porta diferente, você precisará alterar o código no arquivo `src/main.c` e recompilar.
 
 4.  **Utilize o Sistema:** A interface gráfica permitirá que você adicione novos usuários, defina senhas, associe cartões RFID e monitore os logs de acesso.
+### 1.1. Componentes do Sistema
+
+O ecossistema é formado por dois pilares que trabalham em conjunto:
+
+1.  **Firmware (Arduino):** O núcleo operacional que controla os periféricos de hardware. Ele é responsável por:
+    * Ler dados do teclado matricial e do leitor RFID.
+    * Exibir informações no display LCD.
+    * Acionar o mecanismo de trava (servo motor).
+    * Validar credenciais de acesso de forma autônoma.
+    * Comunicar-se com a aplicação desktop via porta serial para sincronização e registro de eventos.
+
+2.  **Aplicação Desktop (C com Raylib):** A interface de gerenciamento central, que oferece uma experiência visual para o administrador do sistema. Suas funções incluem:
+    * **Gerenciamento de Usuários:** Cadastrar, editar e remover usuários, definir senhas, associar cartões RFID e atribuir níveis de acesso.
+    * **Visualização de Logs:** Exibir um registro detalhado de todos os eventos de acesso (autorizados e negados), com informações de usuário, método e horário.
+    * **Sincronização:** Enviar a base de dados de usuários atualizada para o Arduino, garantindo que o hardware sempre tenha as informações mais recentes.
+    * **Recuperação de Senha:** Um mecanismo seguro para que usuários redefinam suas senhas através de uma pergunta de segurança.
+      
+# Sistema de Controle de Acesso (Fechadura Eletrônica)
+
+### Níveis de Acesso
+
+O sistema opera com dois níveis de permissão para usuários:
+
+| Nível | Descrição |
+| :--- | :--- |
+| **1 - Comum** | Usuário padrão com permissão para destravar a porta usando suas credenciais (senha ou RFID). Não tem acesso à tela de administração. |
+| **2 - Administrador** | Usuário com privilégios elevados. Além de poder destravar a porta, tem acesso total à aplicação de gerenciamento para administrar outros usuários e visualizar logs. |
+
+---
+
+## Guia de Uso da Aplicação Desktop
+
+Esta seção detalha o funcionamento de cada tela da aplicação de gerenciamento.
+
+### Tela de Login
+
+A porta de entrada para o sistema. A autenticação pode ser realizada tanto pelo teclado do computador quanto pelo teclado matricial conectado ao Arduino.
+
+**Campos e Botões da Interface:**
+
+| Elemento | Função |
+| :--- | :--- |
+| **Campo ID** | Insira o número de identificação do usuário. O foco alterna automaticamente entre ID e Senha. |
+| **Campo Senha** | Insira a senha numérica. Por segurança, os dígitos são mascarados. |
+| **Mensagem de Status** | Exibe informações contextuais, como "Sistema Pronto", "Acesso Permitido" ou "Acesso Negado". |
+| **Botão Recuperar Senha** | Inicia o fluxo de recuperação de senha para o caso de esquecimento. |
+
+**Interação via Teclado do Arduino:**
+
+* **Números (0-9):** Usados para preencher o campo de ID ou Senha que estiver em foco.
+* **Tecla `#` (Enter/Avançar):** Pressionada uma vez, move o foco do campo ID para o campo Senha. Pressionada novamente, submete os dados para tentativa de login.
+* **Tecla `*` (Cancelar/Limpar):** Limpa os campos de ID e Senha, reiniciando o processo de login.
+
+Após um login bem-sucedido, se o usuário for um **Administrador (Nível 2)**, o sistema redireciona para a Tela de Administração. Se for um usuário **Comum (Nível 1)**, uma mensagem de "Acesso Permitido" é exibida e o comando de abertura é enviado ao Arduino.
+
+### Tela de Administração
+
+O centro de controle do sistema, acessível apenas para usuários com nível de administrador. Esta tela é dividida logicamente em três seções principais: **Gestão de Usuários**, **Logs do Sistema** e **Lista de Usuários**.
+
+#### Painel de Gestão de Usuários
+
+Este painel é usado para adicionar novos usuários ou editar os existentes.
+
+| Campo/Botão | Descrição |
+| :--- | :--- |
+| **ID** | Identificador numérico único para o usuário. O sistema sugere o próximo ID disponível. |
+| **Nome** | Nome completo do usuário para fácil identificação nos logs. |
+| **Senha / Confirmar Senha** | Campos para definir a senha numérica do usuário. A confirmação é necessária para evitar erros. |
+| **Pergunta / Resposta Secreta** | Credenciais para o mecanismo de recuperação de senha. |
+| **Nível de Acesso** | Dropdown para selecionar o nível de permissão: `1 - Comum` ou `2 - Admin`. |
+| **Botão Ler RFID** | Coloca o sistema em modo de escuta. Aproxime um cartão RFID do leitor conectado ao Arduino para associá-lo a este usuário. O UID do cartão será exibido ao lado. |
+| **Botão Salvar** | Cria um novo usuário (se o ID for novo) ou atualiza um usuário existente com as informações fornecidas. |
+| **Botão Limpar** | Limpa todos os campos do formulário. |
+| **Botão Sincronizar** | Envia a lista completa de usuários do software para a memória do Arduino. **É crucial pressionar este botão após qualquer alteração** para que o hardware reconheça novos usuários ou senhas. |
+
+####  Painel de Logs do Sistema
+
+Exibe um registro em tempo real de todos os eventos importantes. Cada entrada de log contém a data, a hora e a descrição do evento (ex: "Acesso LIBERADO ID 101", "Acesso NEGADO ID 102"). Uma barra de rolagem permite navegar por todo o histórico de logs.
+
+#### Painel de Lista de Usuários
+
+Mostra todos os usuários cadastrados no sistema em uma lista rolável. A partir daqui, é possível buscar, editar ou deletar usuários.
+
+| Elemento | Descrição |
+| :--- | :--- |
+| **Campo de Busca** | Filtra a lista de usuários pelo nome ou ID. |
+| **Botão Editar** | Ao clicar neste botão ao lado de um usuário, seus dados são carregados no painel de **Gestão de Usuários** para modificação. |
+| **Botão Deletar** | Remove permanentemente o usuário do sistema. Uma confirmação pode ser necessária. Lembre-se de **sincronizar** após a exclusão. |
+
+### Tela de Recuperação de Senha
+
+Esta tela guia o usuário por um processo de três etapas para redefinir uma senha esquecida.
+
+1.  **Passo 1: Inserir ID:** O usuário deve fornecer o ID da conta que deseja recuperar.
+2.  **Passo 2: Responder Pergunta Secreta:** O sistema exibe a pergunta de segurança associada àquele ID. O usuário deve inserir a resposta correta.
+3.  **Passo 3: Definir Nova Senha:** Se a resposta estiver correta, o usuário poderá definir uma nova senha para a conta.
+
+---
+
+##  Solução de Problemas Comuns 
+
+| Problema | Causa Provável | Solução Sugerida |
+| :--- | :--- | :--- |
+| **Aplicação não inicia ou fecha inesperadamente.** | Falha na instalação da biblioteca Raylib ou drivers gráficos desatualizados. | Reinstale a Raylib seguindo o guia do `README.md` e verifique se os drivers de vídeo do seu computador estão atualizados. |
+| **"Erro ao abrir serial. O Arduino está conectado?"** | O Arduino não está conectado, a porta serial está incorreta ou o driver USB não foi instalado. | 1. Verifique se o cabo USB está firmemente conectado.<br>2. Confirme a porta serial correta na Arduino IDE e ajuste no arquivo `src/main.c` se necessário.<br>3. Instale os drivers CH340/CP210x se estiver usando uma placa Arduino não oficial. |
+| **Teclado ou RFID não respondem na aplicação.** | A comunicação serial está funcionando, mas o Arduino não está processando os dados corretamente. | Verifique as conexões (fiação) do teclado e do módulo RFID no circuito do Arduino. Abra o Serial Monitor na Arduino IDE para depurar as leituras dos periféricos. |
+| **Novo usuário não consegue acesso mesmo com dados corretos.** | As alterações não foram enviadas para o hardware. | Após cadastrar ou alterar qualquer usuário, é **obrigatório** clicar no botão **"Sincronizar"** na tela de administração para que o Arduino receba os novos dados. |
+| **Acesso negado mesmo com a senha correta.** | A senha digitada no teclado matricial pode estar incorreta ou o sistema está com foco no campo errado. | Use a tecla `*` para limpar os campos e comece de novo. Digite o ID, pressione `#`, digite a senha e pressione `#` novamente. Verifique se a senha cadastrada no sistema está correta. |
