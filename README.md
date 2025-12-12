@@ -217,7 +217,6 @@ Mostra todos os usuários cadastrados no sistema em uma lista rolável. A partir
 | Elemento | Descrição |
 | :--- | :--- |
 | **Campo de Busca** | Filtra a lista de usuários pelo nome ou ID. |
-| **Botão Editar** | Ao clicar neste botão ao lado de um usuário, seus dados são carregados no painel de **Gestão de Usuários** para modificação. |
 | **Botão Deletar** | Remove permanentemente o usuário do sistema. Uma confirmação pode ser necessária. Lembre-se de **sincronizar** após a exclusão. |
 
 ### Tela de Recuperação de Senha
