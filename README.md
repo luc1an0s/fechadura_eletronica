@@ -1,5 +1,3 @@
-# fechadura_eletronica
-projeto de fechadura eletrônica inteligente desenvolvida em linguagem C, com interface embarcada via Arduino Uno
 # Sistema de Controle de Acesso com Arduino e Raylib
 
 ## Introdução
@@ -130,4 +128,3 @@ As instruções variam dependendo do seu sistema operacional.
 3.  **Verifique a Conexão Serial:** A aplicação tentará se conectar automaticamente à porta serial (`/dev/ttyACM0` no Linux, `COM3` no Windows). Se o seu Arduino estiver em uma porta diferente, você precisará alterar o código no arquivo `src/main.c` e recompilar.
 
 4.  **Utilize o Sistema:** A interface gráfica permitirá que você adicione novos usuários, defina senhas, associe cartões RFID e monitore os logs de acesso.
-
