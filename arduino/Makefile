@@ -1,0 +1,60 @@
+# Makefile para Sistema de Controle de Acesso ||||
+#-------------------------------------------------
+
+# Nome do executável final
+TARGET = sistema_acesso
+
+# Compilador
+CC = gcc
+
+# Flags de Compilação
+# -Iinclude: Procura arquivos .h na pasta include
+# -Wall: Mostra todos os avisos (bom para debug)
+# -g: Adiciona informações de debug
+# -D_DEFAULT_SOURCE: Necessário para algumas funções do Linux
+CFLAGS = -Wall -std=c99 -D_DEFAULT_SOURCE -Wno-missing-braces -Iinclude -g
+
+# Bibliotecas para Linkagem (Raylib + dependências do Linux)
+LDFLAGS = -lraylib -lm -lpthread -ldl -lrt -lX11
+
+# Diretórios
+SRC_DIR = src
+OBJ_DIR = obj
+
+# Encontra automaticamente todos os arquivos .c em src/
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+
+# Gera a lista de objetos .o baseada nos arquivos .c
+# Exemplo: src/main.c -> obj/main.o
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+
+# --- Regras de Compilação ---
+
+# Regra padrão (executada ao digitar apenas 'make')
+all: $(TARGET)
+
+# Linkagem final: Junta todos os .o para criar o executável
+$(TARGET): $(OBJS)
+	@echo "Linkando $(TARGET)..."
+	$(CC) $(OBJS) -o $@ $(LDFLAGS)
+	@echo "Build com Sucesso! Execute: ./$(TARGET)"
+
+# Compilação dos objetos: Transforma cada .c em .o
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+	@echo "Compilando $<..."
+	$(CC) $(CFLAGS) -c $< -o $@
+
+# Cria o diretório de objetos se não existir
+$(OBJ_DIR):
+	mkdir -p $(OBJ_DIR)
+
+# Limpeza: Remove executável e pasta de objetos
+clean:
+	@echo "Limpando arquivos de build..."
+	rm -rf $(OBJ_DIR) $(TARGET)
+
+# Atalho para compilar e rodar imediatamente
+run: all
+	./$(TARGET)
+
+.PHONY: all clean run
